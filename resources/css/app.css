@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../js/**/*.js';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --color-navy-50: #f0f6fc;
+    --color-navy-100: #dce7f5;
+    --color-navy-200: #bcd3ed;
+    --color-navy-600: #004b99;
+    --color-navy-700: #003B7A;
+    --color-navy-800: #002d5e;
+    --color-navy-900: #002042;
+    
+    --color-gold-50: #fffbeb;
+    --color-gold-100: #fef3c7;
+    --color-gold-400: #fbbf24;
+    --color-gold-500: #F9A703;
+    --color-gold-600: #d98f02;
+    --color-gold-700: #b47201;
+
+    --color-surface-light: #F1F5F9;
+    --color-surface-dark: #1E293B;
+}
+
+.bg-navy { background-color: #003B7A; }
+.bg-navy-dark { background-color: #002042; }
+.text-navy { color: #003B7A; }
+.border-navy { border-color: #003B7A; }
+
+.bg-gold { background-color: #F9A703; }
+.text-gold { color: #F9A703; }
+.border-gold { border-color: #F9A703; }
