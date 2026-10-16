@@ -100,7 +100,8 @@
             
             <!-- Canvas Frame (16:9) -->
             <div class="w-full max-w-4xl aspect-video rounded-3xl p-6 sm:p-10 flex flex-col justify-between shadow-2xl border relative overflow-hidden transition-all duration-300"
-                 :class="getThemeClasses(presentation.theme)">
+                 :class="getThemeClasses(presentation.theme)"
+                 :style="currentSlide.settings?.background_image ? 'background-image: linear-gradient(rgba(15,23,42,0.65), rgba(15,23,42,0.85)), url(' + currentSlide.settings.background_image + '); background-size: cover; background-position: center;' : ''">
                 
                 <!-- Slide Header (Join Instruction) -->
                 <div x-show="isHeaderVisible()"
@@ -129,16 +130,22 @@
                 </div>
 
                 <!-- Slide Content Area (Dynamic based on current slide type) -->
-                <div class="flex-1 flex flex-col items-center justify-center py-6 text-center w-full">
+                <div class="flex-1 flex flex-col items-center justify-center py-4 text-center w-full">
                     
                     <!-- Question / Title -->
-                    <h2 class="text-xl sm:text-3xl font-extrabold tracking-tight mb-3 max-w-2xl"
+                    <h2 class="text-xl sm:text-3xl font-extrabold tracking-tight mb-2 max-w-2xl"
                         :class="presentation.theme === 'light_tech' ? 'text-slate-900' : 'text-white'"
                         x-text="currentSlide.question || 'Tulis pertanyaan Anda di panel samping'"></h2>
 
-                    <p class="text-xs sm:text-sm mb-6 max-w-xl"
+                    <p class="text-xs sm:text-sm mb-4 max-w-xl"
                        :class="presentation.theme === 'light_tech' ? 'text-slate-600' : 'text-slate-200 opacity-70'"
                        x-show="currentSlide.description" x-text="currentSlide.description"></p>
+
+                    <!-- Content Image (if any) -->
+                    <div x-show="currentSlide.settings?.content_image" class="mb-4 max-w-sm sm:max-w-md w-full">
+                        <img :src="currentSlide.settings?.content_image" alt="Content Image" 
+                             class="max-h-36 sm:max-h-44 w-auto mx-auto rounded-2xl object-contain shadow-lg border border-white/20 bg-slate-900/40">
+                    </div>
 
                     <!-- Type Specific Preview Widget -->
                     <div class="w-full max-w-xl mx-auto">
@@ -320,6 +327,40 @@
                         <input type="text" x-model="currentSlide.description" @input="debounceSaveSlide()"
                                placeholder="Petunjuk singkat untuk peserta..."
                                class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+
+                    <!-- Quick Image Attachment in Content Tab -->
+                    <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-white block">Content Image (Gambar Materi / Soal)</span>
+                                    <span class="text-[10px] text-slate-400 block">Tampilkan gambar ilustrasi di dalam slide</span>
+                                </div>
+                            </div>
+                            <button type="button" @click="openImageModal('content')"
+                                    class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-300 border border-slate-700 flex items-center justify-center transition-all text-base font-bold shadow-sm"
+                                    title="Tambah / Ganti Gambar Materi">
+                                +
+                            </button>
+                        </div>
+                        <div x-show="currentSlide.settings?.content_image" class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <img :src="currentSlide.settings?.content_image" alt="Preview" class="w-8 h-8 rounded-lg object-cover border border-slate-700 bg-slate-950 flex-shrink-0">
+                                <span class="text-[11px] text-emerald-400 font-medium truncate">✓ Gambar Terpasang</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <button type="button" @click="openImageModal('content')" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 px-2 py-0.5 rounded hover:bg-slate-800">
+                                    Ganti
+                                </button>
+                                <button type="button" @click="removeImage('content')" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-0.5 rounded hover:bg-slate-800">
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Multiple Choice / Quiz Options Section -->
@@ -575,6 +616,88 @@
                                        class="w-4 h-4 mt-0.5 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-indigo-500 cursor-pointer">
                             </label>
                         </div>
+
+                        <!-- Media & Gambar Slide (Mentimeter Style) -->
+                        <div class="pt-4 border-t border-slate-800 space-y-3">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Gambar & Media Slide</span>
+
+                            <!-- 1. Content image row -->
+                            <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold text-white block">Content image</span>
+                                            <span class="text-[10px] text-slate-400 block">Gambar materi atau soal kuis</span>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" @click="openImageModal('content')"
+                                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-300 border border-slate-700 flex items-center justify-center transition-all text-base font-bold shadow-sm"
+                                            title="Tambah atau Ganti Content Image">
+                                        +
+                                    </button>
+                                </div>
+
+                                <!-- Preview & Actions if content_image exists -->
+                                <div x-show="currentSlide.settings?.content_image" class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <img :src="currentSlide.settings?.content_image" alt="Content Preview" class="w-10 h-10 rounded-lg object-cover border border-slate-700 bg-slate-950 flex-shrink-0">
+                                        <span class="text-[11px] text-emerald-400 font-medium truncate">✓ Terpasang</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        <button type="button" @click="openImageModal('content')" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded hover:bg-slate-800">
+                                            Ganti
+                                        </button>
+                                        <button type="button" @click="removeImage('content')" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-1 rounded hover:bg-slate-800">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Background image row -->
+                            <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-xs font-bold text-white">Background image</span>
+                                                <span class="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] flex items-center justify-center font-bold">★</span>
+                                            </div>
+                                            <span class="text-[10px] text-slate-400 block">Latar belakang visual slide</span>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" @click="openImageModal('background')"
+                                            class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-300 border border-slate-700 flex items-center justify-center transition-all text-base font-bold shadow-sm"
+                                            title="Tambah atau Ganti Background Image">
+                                        +
+                                    </button>
+                                </div>
+
+                                <!-- Preview & Actions if background_image exists -->
+                                <div x-show="currentSlide.settings?.background_image" class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <img :src="currentSlide.settings?.background_image" alt="Background Preview" class="w-10 h-10 rounded-lg object-cover border border-slate-700 bg-slate-950 flex-shrink-0">
+                                        <span class="text-[11px] text-emerald-400 font-medium truncate">✓ Background Aktif</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                        <button type="button" @click="openImageModal('background')" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded hover:bg-slate-800">
+                                            Ganti
+                                        </button>
+                                        <button type="button" @click="removeImage('background')" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-1 rounded hover:bg-slate-800">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -685,6 +808,83 @@
         </div>
     </div>
 
+    <!-- Add / Change Slide Image Modal (Upload or Web URL) -->
+    <div x-show="imageModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div @click.away="if (!isUploadingImage) imageModal = false" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-white">
+            <div class="flex items-center justify-between mb-5">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-white" x-text="imageTarget === 'content' ? 'Tambah Content Image' : 'Tambah Background Image'"></h3>
+                        <p class="text-xs text-slate-400" x-text="imageTarget === 'content' ? 'Gambar akan tampil sebagai ilustrasi materi di dalam slide.' : 'Gambar akan menjadi latar belakang visual di layar slide.'"></p>
+                    </div>
+                </div>
+                <button type="button" @click="imageModal = false" :disabled="isUploadingImage" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+
+            <!-- Error message if any -->
+            <div x-show="uploadError" class="mb-4 p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs font-semibold" x-text="uploadError"></div>
+
+            <!-- Option Tabs inside modal: Upload File vs Web URL -->
+            <div class="space-y-4">
+                <!-- 1. Drag & Drop / File Upload Box -->
+                <div class="p-6 rounded-2xl border-2 border-dashed border-slate-700 hover:border-indigo-500 bg-slate-950/60 text-center transition-all cursor-pointer relative group">
+                    <input type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                           @change="uploadImageFile($event)"
+                           :disabled="isUploadingImage"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    
+                    <div class="space-y-2 pointer-events-none">
+                        <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        </div>
+                        <div>
+                            <span class="text-sm font-bold text-white block">Pilih atau Seret Gambar dari Komputer</span>
+                            <span class="text-xs text-slate-400 block mt-0.5">PNG, JPG, WEBP, GIF (Maks. 5MB)</span>
+                        </div>
+                    </div>
+
+                    <!-- Uploading Spinner -->
+                    <div x-show="isUploadingImage" class="absolute inset-0 bg-slate-950/90 rounded-2xl flex flex-col items-center justify-center gap-2">
+                        <div class="w-7 h-7 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span class="text-xs font-bold text-indigo-300">Mengunggah gambar...</span>
+                    </div>
+                </div>
+
+                <div class="relative flex items-center justify-center">
+                    <div class="border-t border-slate-800 w-full"></div>
+                    <span class="bg-slate-900 px-3 text-[11px] uppercase font-bold text-slate-500 tracking-wider absolute">atau tautan url</span>
+                </div>
+
+                <!-- 2. Web URL Input -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">URL Gambar Langsung</label>
+                    <div class="flex items-center gap-2">
+                        <input type="url" x-model="imageUrlInput"
+                               placeholder="https://contoh.com/gambar.jpg"
+                               class="flex-1 px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                        <button type="button" @click="saveImageUrl()"
+                                :disabled="!imageUrlInput.trim()"
+                                class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all shadow-md flex-shrink-0">
+                            Gunakan URL
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Anda dapat menyalin tautan gambar dari internet atau Google.</p>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+                <button type="button" @click="imageModal = false" :disabled="isUploadingImage"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -698,6 +898,11 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
         saveTimeout: null,
         shareModal: false,
         newSlideModal: false,
+        imageModal: false,
+        imageTarget: 'content',
+        imageUrlInput: '',
+        isUploadingImage: false,
+        uploadError: null,
 
         init() {
             // Sortable slide thumbnails on the left
@@ -796,6 +1001,73 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
             }
             this.currentSlide.settings.show_header = !this.isHeaderVisible();
             this.saveSlide();
+        },
+
+        openImageModal(target) {
+            this.imageTarget = target;
+            this.imageUrlInput = (this.currentSlide.settings && this.currentSlide.settings[target + '_image']) || '';
+            this.uploadError = null;
+            this.imageModal = true;
+        },
+
+        uploadImageFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('target', this.imageTarget);
+
+            this.isUploadingImage = true;
+            this.uploadError = null;
+
+            fetch('/slides/' + this.currentSlide.id + '/image', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            })
+            .then(r => r.json().then(data => ({ ok: r.ok, data })))
+            .then(({ ok, data }) => {
+                this.isUploadingImage = false;
+                if (!ok) {
+                    this.uploadError = data.message || 'Gagal mengunggah gambar.';
+                    return;
+                }
+                this.currentSlide.settings = data.settings;
+                this.imageModal = false;
+            })
+            .catch(() => {
+                this.isUploadingImage = false;
+                this.uploadError = 'Terjadi kesalahan jaringan saat mengunggah.';
+            });
+        },
+
+        saveImageUrl() {
+            if (!this.imageUrlInput.trim()) return;
+            this.currentSlide.settings = this.currentSlide.settings || {};
+            this.currentSlide.settings[this.imageTarget + '_image'] = this.imageUrlInput.trim();
+            this.saveSlide();
+            this.imageModal = false;
+        },
+
+        removeImage(target) {
+            if (!confirm('Hapus gambar ini dari slide?')) return;
+            fetch('/slides/' + this.currentSlide.id + '/remove-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ target: target })
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.currentSlide.settings = data.settings;
+            });
         },
 
         addOption() {

@@ -75,6 +75,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/slides/{slide}/duplicate', [SlideController::class, 'duplicate'])->name('slides.duplicate');
     Route::post('/presentations/{presentation}/slides/reorder', [SlideController::class, 'reorder'])->name('slides.reorder');
     Route::get('/slides/{slide}/data', [SlideController::class, 'show'])->name('slides.data');
+    Route::post('/slides/{slide}/image', [SlideController::class, 'uploadImage'])->name('slides.image.upload');
+    Route::post('/slides/{slide}/remove-image', [SlideController::class, 'removeImage'])->name('slides.image.remove');
 
     // Live Presenter View
     Route::get('/presentations/{presentation}/present', [PresenterController::class, 'present'])->name('presenter.view');
@@ -105,4 +107,3 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/features/{setting}/toggle', [SuperadminController::class, 'toggleFeature'])->name('features.toggle');
     });
 });
-

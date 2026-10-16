@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class SlideController extends Controller
 {
@@ -115,6 +116,83 @@ class SlideController extends Controller
         }
 
         return redirect()->route('presentations.edit', $presentation->id);
+    }
+
+    /**
+     * Upload an image (content image or background image) for a slide.
+     */
+    public function uploadImage(Request $request, Slide $slide): JsonResponse
+    {
+        if ($slide->presentation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'image' => ['required', 'file', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
+            'target' => ['required', 'string', 'in:content,background'],
+        ]);
+
+        $file = $request->file('image');
+        $target = $request->input('target');
+
+        $uploadPath = public_path('uploads/slides');
+        File::ensureDirectoryExists($uploadPath);
+
+        $filename = 'slide_'.$slide->id.'_'.$target.'_'.time().'.'.$file->getClientOriginalExtension();
+        $file->move($uploadPath, $filename);
+
+        $url = asset('uploads/slides/'.$filename);
+
+        $settings = $slide->settings ?? [];
+        if ($target === 'background') {
+            $settings['background_image'] = $url;
+        } else {
+            $settings['content_image'] = $url;
+        }
+
+        $slide->settings = $settings;
+        $slide->save();
+
+        return response()->json([
+            'success' => true,
+            'url' => $url,
+            'target' => $target,
+            'settings' => $slide->settings,
+            'message' => 'Gambar berhasil diunggah.',
+        ]);
+    }
+
+    /**
+     * Remove an image from a slide.
+     */
+    public function removeImage(Request $request, Slide $slide): JsonResponse
+    {
+        if ($slide->presentation->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'target' => ['required', 'string', 'in:content,background'],
+        ]);
+
+        $target = $request->input('target');
+        $settings = $slide->settings ?? [];
+
+        if ($target === 'background') {
+            unset($settings['background_image']);
+        } else {
+            unset($settings['content_image']);
+        }
+
+        $slide->settings = $settings;
+        $slide->save();
+
+        return response()->json([
+            'success' => true,
+            'target' => $target,
+            'settings' => $slide->settings,
+            'message' => 'Gambar berhasil dihapus.',
+        ]);
     }
 
     /**

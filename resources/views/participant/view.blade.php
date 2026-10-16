@@ -98,6 +98,12 @@
                     x-text="currentSlide.question || 'Pertanyaan'"></h1>
 
                 <p class="text-xs text-slate-400" x-show="currentSlide.description" x-text="currentSlide.description"></p>
+
+                <!-- Content Image if any -->
+                <div x-show="currentSlide.settings?.content_image" class="mt-3 max-w-sm mx-auto">
+                    <img :src="currentSlide.settings?.content_image" alt="Ilustrasi Soal" 
+                         class="max-h-48 w-auto mx-auto rounded-2xl object-contain shadow-lg border border-slate-700 bg-slate-900/60">
+                </div>
             </div>
 
             <!-- Quiz Timer Bar (if Quiz) -->

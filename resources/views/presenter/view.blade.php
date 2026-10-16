@@ -27,7 +27,8 @@
 
     <!-- Screen Background Theme Wrapper -->
     <div class="h-full w-full flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden transition-all duration-500"
-         :class="getThemeBackground()">
+         :class="getThemeBackground()"
+         :style="currentSlide.settings?.background_image ? 'background-image: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.85)), url(' + currentSlide.settings.background_image + '); background-size: cover; background-position: center;' : ''">
 
         <!-- Decorative background elements -->
         <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-all duration-500"
@@ -121,6 +122,12 @@
                 <p class="mt-3 text-base sm:text-lg font-medium max-w-2xl mx-auto transition-colors"
                    :class="isLight() ? 'text-slate-600' : 'text-slate-300'"
                    x-show="currentSlide.description" x-text="currentSlide.description"></p>
+
+                <!-- Content Image if any -->
+                <div x-show="currentSlide.settings?.content_image" class="mt-5 max-w-md mx-auto">
+                    <img :src="currentSlide.settings?.content_image" alt="Content Image" 
+                         class="max-h-52 sm:max-h-60 w-auto mx-auto rounded-3xl object-contain shadow-2xl border border-white/20 bg-slate-900/60">
+                </div>
             </div>
 
             <!-- Dynamic Presentation Visualizer based on Type -->
