@@ -1,15 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
+<div class="flex-1 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
     <div class="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-100">
         <!-- Logo & Header -->
         <div class="text-center">
             <a href="{{ route('home') }}" class="inline-flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-teal-400 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-600/20">
-                    S
-                </div>
-                <span class="text-2xl font-black tracking-tight text-slate-900">Spirit<span class="text-indigo-600">Meter</span></span>
+                <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="h-10 w-auto object-contain">
+                <span class="text-2xl font-black tracking-tight text-slate-900">Spirit<span class="text-[#003B7A]">Meter</span></span>
             </a>
             <h2 class="mt-6 text-2xl font-extrabold text-slate-900">Daftar Akun Baru</h2>
             <p class="mt-2 text-sm text-slate-500">Gratis selamanya, buat polling dalam hitungan menit.</p>

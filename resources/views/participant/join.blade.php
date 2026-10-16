@@ -1,14 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-full flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8 bg-[#1E293B] text-white">
+<div class="flex-1 min-h-screen flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8 bg-[#1E293B] text-white">
     
     <!-- Header -->
     <div class="text-center">
         <a href="{{ route('home') }}" class="inline-flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#003B7A] to-[#F9A703] flex items-center justify-center font-black text-white text-base shadow-lg shadow-black/20">
-                S
-            </div>
+            <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="h-9 w-auto object-contain">
             <span class="text-xl font-black tracking-tight text-white">Spirit<span class="text-[#F9A703]">Meter</span></span>
         </a>
     </div>

@@ -1,16 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-full flex flex-col bg-white">
+<div class="min-h-screen flex flex-col bg-white">
     <!-- Navbar -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-10">
                 <!-- Logo -->
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#003B7A] to-[#F9A703] flex items-center justify-center shadow-lg shadow-[#003B7A]/20 text-white font-black text-xl">
-                        S
-                    </div>
+                    <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="h-10 w-auto object-contain">
                     <span class="text-2xl font-black tracking-tight text-[#1E293B]">Spirit<span class="text-[#003B7A]">Meter</span></span>
                 </a>
 
@@ -47,7 +45,7 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="relative pt-12 pb-24 overflow-hidden bg-gradient-to-b from-indigo-50/40 via-white to-white">
+    <section class="relative pt-12 pb-24 overflow-hidden bg-gradient-to-b from-indigo-50/40 via-white to-white shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
                 
@@ -106,7 +104,7 @@
                             <!-- Top presentation instruction bar -->
                             <div class="flex items-center justify-between pb-6 border-b border-slate-800">
                                 <div>
-                                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Bergabung di spiritmeter.test/join</div>
+                                    <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Bergabung di {{ request()->getHost() }}/join</div>
                                     <div class="text-xl sm:text-2xl font-black text-amber-400 tracking-wider font-mono">1234 5678</div>
                                 </div>
                                 <div class="w-12 h-12 bg-white rounded-xl p-1 flex items-center justify-center">
@@ -174,7 +172,7 @@
     </section>
 
     <!-- Slide Types Showcase Section -->
-    <section id="fitur" class="py-20 bg-slate-50 border-y border-slate-200">
+    <section id="fitur" class="py-20 bg-slate-50 border-y border-slate-200 shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center max-w-3xl mx-auto mb-16">
                 <h2 class="text-xs font-extrabold tracking-widest text-indigo-600 uppercase mb-2">Tipe Slide Lengkap Mentimeter</h2>
@@ -279,7 +277,7 @@
     </section>
 
     <!-- Templates Preview Section -->
-    <section id="template" class="py-20 bg-white">
+    <section id="template" class="py-20 bg-white shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
                 <div>
@@ -343,15 +341,13 @@
     </section>
 
     <!-- Footer -->
-    <footer class="mt-auto bg-slate-900 text-slate-400 py-16 border-t border-slate-800">
+    <footer class="mt-auto bg-slate-900 text-slate-400 py-16 border-t border-slate-800 shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
                 <div class="col-span-2">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold text-lg">
-                            S
-                        </div>
-                        <span class="text-xl font-black text-white">Spirit<span class="text-indigo-400">Meter</span></span>
+                        <img src="{{ asset('image/logo spiritmeter.png') }}" alt="SpiritMeter Logo" class="h-8 w-auto object-contain">
+                        <span class="text-xl font-black text-white">Spirit<span class="text-[#F9A703]">Meter</span></span>
                     </div>
                     <p class="text-sm text-slate-400 max-w-sm mb-4">
                         Platform interaksi presentasi modern, mudah digunakan, dan real-time. Terinspirasi dari pengalaman terbaik Mentimeter.

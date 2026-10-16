@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $presentation->title }} - Peserta SpiritMeter</title>
+    <link rel="icon" type="image/png" href="{{ asset('image/logo spiritmeter.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,9 +27,9 @@
     <header class="px-4 py-3 sticky top-0 z-30 flex items-center justify-between border-b transition-colors"
             :class="state.theme === 'light_tech' ? 'bg-white/95 border-blue-100 backdrop-blur-md shadow-sm' : 'bg-slate-900 border-slate-800'">
         <div class="flex items-center gap-2.5 truncate max-w-[65%]">
-            <span class="w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs text-white flex-shrink-0"
-                  :class="state.theme === 'light_tech' ? 'bg-blue-600 shadow-sm' : 'bg-indigo-600'">
-                S
+            <span class="w-7 h-7 rounded-lg p-0.5 flex items-center justify-center flex-shrink-0"
+                  :class="state.theme === 'light_tech' ? 'bg-white border border-blue-200 shadow-sm' : 'bg-slate-950 border border-slate-800'">
+                <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="w-full h-full object-contain">
             </span>
             <span class="text-xs sm:text-sm font-bold truncate"
                   :class="state.theme === 'light_tech' ? 'text-slate-800' : 'text-slate-200'"

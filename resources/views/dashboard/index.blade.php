@@ -8,9 +8,7 @@
             <div class="flex items-center gap-8">
                 <!-- Brand -->
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#003B7A] to-[#F9A703] flex items-center justify-center text-white font-black text-lg shadow-sm">
-                        S
-                    </div>
+                    <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="h-9 w-auto object-contain">
                     <span class="text-xl font-black tracking-tight text-[#1E293B] hidden sm:inline">Spirit<span class="text-[#003B7A]">Meter</span></span>
                 </a>
 

@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $presentation->title }} - Presenter View</title>
+    <link rel="icon" type="image/png" href="{{ asset('image/logo spiritmeter.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,27 +35,49 @@
         <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-all duration-500"
              :class="isLight() ? 'bg-sky-400/20' : 'bg-teal-500/10'"></div>
 
+        <!-- Floating Quick Show Header Trigger when hidden -->
+        <div x-show="!showJoinBar" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="absolute top-4 left-1/2 -translate-x-1/2 z-30">
+            <button @click="showJoinBar = true; _joinBarUserToggled = true" 
+                    class="px-4 py-2 rounded-full backdrop-blur-md text-xs font-bold border shadow-xl flex items-center gap-2 transition-all opacity-75 hover:opacity-100 hover:scale-105"
+                    :class="isLight() ? 'bg-white/95 border-blue-200 text-blue-700 shadow-blue-500/10' : 'bg-slate-900/90 border-slate-700 text-slate-200 shadow-black/50'">
+                <img src="{{ asset('image/logo spiritmeter.png') }}" alt="SpiritMeter" class="w-4 h-4 object-contain">
+                <span>Tampilkan PIN & Link Join</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-slate-700">H</span>
+            </button>
+        </div>
+
         <!-- TOP BAR: Join Instructions -->
-        <header class="relative z-20 flex items-center justify-between pb-4 border-b transition-colors"
+        <header x-show="showJoinBar"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 -translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 -translate-y-4"
+                class="relative z-20 flex items-center justify-between pb-4 border-b transition-colors"
                 :class="isLight() ? 'border-blue-200/60' : 'border-white/10'">
             <div class="flex items-center gap-4">
                 <a href="{{ route('dashboard') }}" 
-                   class="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-lg transition-all"
-                   :class="isLight() ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20' : 'bg-white/10 hover:bg-white/20 text-white'" 
-                   title="Kembali">
-                    S
+                   class="w-10 h-10 rounded-2xl p-1.5 flex items-center justify-center transition-all group"
+                   :class="isLight() ? 'bg-white hover:bg-slate-50 border border-blue-200 shadow-md shadow-blue-500/10' : 'bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 shadow-md'" 
+                   title="Kembali ke Dashboard">
+                    <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="w-full h-full object-contain group-hover:scale-105 transition-transform">
                 </a>
                 <div>
                     <div class="text-xs sm:text-sm font-semibold transition-colors"
                          :class="isLight() ? 'text-slate-600' : 'text-slate-300'">
                         Bergabung di <span class="font-extrabold underline underline-offset-4"
                                           :class="isLight() ? 'text-blue-600 decoration-blue-500' : 'text-white decoration-indigo-400'"
-                                          x-text="joinDomain">spiritmeter.test/join</span>
+                                          x-text="joinDomain">{{ request()->getHost() }}/join</span>
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
                 <div class="px-5 py-2 rounded-2xl backdrop-blur-md border flex items-center gap-3 shadow-lg transition-all"
                      :class="isLight() ? 'bg-white/95 border-blue-200/80 shadow-blue-500/5' : 'bg-white/10 border-white/15'">
                     <span class="text-xs font-bold uppercase tracking-widest hidden sm:inline"
@@ -71,6 +94,16 @@
                         title="Tampilkan QR Code Besar">
                     <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v3h-3v-3zm-5 5h3v3h-3v-3zm3 0h3v3h-3v-3zm2-2h3v3h-3v-3z"/>
+                    </svg>
+                </button>
+
+                <!-- Hide Header Button -->
+                <button @click="showJoinBar = false; _joinBarUserToggled = true" 
+                        class="p-2.5 rounded-2xl border transition-all"
+                        :class="isLight() ? 'bg-white hover:bg-slate-50 border-blue-200 text-slate-500 hover:text-slate-800 shadow-sm' : 'bg-white/10 hover:bg-white/20 border-white/15 text-slate-400 hover:text-white'"
+                        title="Sembunyikan Header PIN & Join (Tekan H)">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                     </svg>
                 </button>
             </div>
@@ -361,6 +394,22 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 </button>
 
+                <!-- Toggle Header PIN & Join Instructions -->
+                <button @click="showJoinBar = !showJoinBar; _joinBarUserToggled = true" 
+                        class="p-2.5 rounded-xl border transition-all" 
+                        :class="showJoinBar 
+                            ? (isLight() ? 'bg-blue-50 border-blue-300 text-blue-600 shadow-sm' : 'bg-white/10 hover:bg-white/20 border-white/15 text-amber-300') 
+                            : (isLight() ? 'bg-slate-200 text-slate-400 border-slate-300 hover:text-slate-600' : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-white')"
+                        :title="showJoinBar ? 'Sembunyikan Header PIN (H)' : 'Tampilkan Header PIN (H)'">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showJoinBar">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
+                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showJoinBar">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                </button>
+
                 <!-- Fullscreen Toggle -->
                 <button @click="toggleFullscreen()" 
                         class="p-2.5 rounded-xl border transition-all" 
@@ -384,7 +433,7 @@
             </div>
 
             <div class="text-xs text-slate-400">
-                Atau buka <strong class="text-white">spiritmeter.test/join</strong> &bull; Masukkan PIN: <span class="font-mono text-amber-300 font-bold text-base" x-text="state.formatted_code"></span>
+                Atau buka <strong class="text-white" x-text="joinDomain">{{ request()->getHost() }}/join</strong> &bull; Masukkan PIN: <span class="font-mono text-amber-300 font-bold text-base" x-text="state.formatted_code"></span>
             </div>
 
             <button @click="showQrModal = false" class="mt-6 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-sm transition-all">
@@ -410,6 +459,8 @@
             allSlides: @json($presentation->slides),
             showCorrectAnswer: false,
             showQrModal: false,
+            showJoinBar: true,
+            _joinBarUserToggled: false,
             pollingInterval: null,
 
             init() {
@@ -439,6 +490,11 @@
                         this.state = data;
                         this.currentSlide = data.slide || {};
                         this.results = data.results || {};
+
+                        // Check slide show_header setting if not manually toggled by user in this session
+                        if (!this._joinBarUserToggled && this.currentSlide.settings && this.currentSlide.settings.show_header !== undefined) {
+                            this.showJoinBar = this.currentSlide.settings.show_header;
+                        }
 
                         // Trigger confetti on leaderboard
                         if (this.currentSlide.type === 'leaderboard' && window.confetti) {
@@ -518,6 +574,9 @@
                     this.toggleResults();
                 } else if (e.key.toLowerCase() === 'c') {
                     this.toggleVoting();
+                } else if (e.key.toLowerCase() === 'h') {
+                    this.showJoinBar = !this.showJoinBar;
+                    this._joinBarUserToggled = true;
                 }
             },
 

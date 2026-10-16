@@ -11,9 +11,7 @@
             <!-- Left: Title & Badge -->
             <div class="flex items-center gap-4">
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 flex items-center justify-center text-white font-black text-xl shadow-md shadow-blue-500/20 group-hover:scale-105 transition-all">
-                        🛡️
-                    </div>
+                    <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="h-10 w-auto object-contain group-hover:scale-105 transition-all">
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="text-lg font-black tracking-tight text-slate-900">Control Center</span>

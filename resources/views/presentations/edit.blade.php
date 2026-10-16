@@ -103,16 +103,23 @@
                  :class="getThemeClasses(presentation.theme)">
                 
                 <!-- Slide Header (Join Instruction) -->
-                <div class="flex items-center justify-between pb-4 border-b"
+                <div x-show="isHeaderVisible()"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-2"
+                     class="flex items-center justify-between pb-4 border-b"
                      :class="presentation.theme === 'light_tech' ? 'border-blue-200/80' : 'border-white/10'">
                     <div class="flex items-center gap-3">
-                        <div class="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-sm"
-                             :class="presentation.theme === 'light_tech' ? 'bg-blue-600 shadow-blue-500/20' : 'bg-indigo-500'">
-                            S
+                        <div class="w-8 h-8 rounded-xl p-1 flex items-center justify-center shadow-sm flex-shrink-0"
+                             :class="presentation.theme === 'light_tech' ? 'bg-white border border-blue-200 shadow-blue-500/10' : 'bg-slate-900/90 border border-slate-700/80'">
+                            <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="w-full h-full object-contain">
                         </div>
                         <div class="text-xs sm:text-sm font-medium tracking-wide"
                              :class="presentation.theme === 'light_tech' ? 'text-slate-600' : 'text-slate-200 opacity-80'">
-                            Masuk ke <strong class="font-bold underline" :class="presentation.theme === 'light_tech' ? 'text-blue-600 decoration-blue-500' : ''">spiritmeter.test/join</strong>
+                            Masuk ke <strong class="font-bold underline" :class="presentation.theme === 'light_tech' ? 'text-blue-600 decoration-blue-500' : ''" x-text="window.location.host + '/join'">{{ request()->getHost() }}/join</strong>
                         </div>
                     </div>
                     <div class="px-3 py-1 rounded-xl backdrop-blur-md text-xs sm:text-sm font-mono font-black border"
@@ -236,17 +243,38 @@
             </div>
 
             <!-- Canvas Bottom Controls -->
-            <div class="mt-4 flex items-center gap-3">
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
                 <button @click="previousSlide()" :disabled="currentSlideIndex <= 0"
-                        class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white rounded-xl transition-all">
+                        class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white rounded-xl transition-all"
+                        title="Slide Sebelumnya">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 </button>
                 <span class="text-xs font-bold text-slate-400">
                     Slide <span x-text="currentSlideIndex + 1"></span> dari <span x-text="slides.length"></span>
                 </span>
                 <button @click="nextSlide()" :disabled="currentSlideIndex >= slides.length - 1"
-                        class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white rounded-xl transition-all">
+                        class="p-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white rounded-xl transition-all"
+                        title="Slide Selanjutnya">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+
+                <div class="h-4 w-px bg-slate-800 mx-1"></div>
+
+                <!-- Toggle Button Header PIN -->
+                <button type="button" @click="toggleSlideHeader()"
+                        class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+                        :class="isHeaderVisible() 
+                            ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-600/30' 
+                            : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'"
+                        :title="isHeaderVisible() ? 'Klik untuk Sembunyikan Header PIN' : 'Klik untuk Tampilkan Header PIN'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="isHeaderVisible()">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!isHeaderVisible()">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>
+                    </svg>
+                    <span x-text="isHeaderVisible() ? 'Header PIN: Tampil' : 'Header PIN: Sembunyi'"></span>
                 </button>
             </div>
         </div>
@@ -526,6 +554,27 @@
                                 <option value="closed">Tutup (Kunci Voting)</option>
                             </select>
                         </label>
+
+                        <!-- Toggle Checkbox Header PIN -->
+                        <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all">
+                            <label class="flex items-start justify-between gap-3 cursor-pointer">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-white">Header Instruksi PIN</span>
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
+                                              :class="isHeaderVisible() ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-400'"
+                                              x-text="isHeaderVisible() ? 'Tampil' : 'Hidden'"></span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-400 block mt-0.5 leading-snug">
+                                        Tampilkan logo, tautan URL, dan kode PIN di bagian atas slide
+                                    </span>
+                                </div>
+                                <input type="checkbox" 
+                                       :checked="isHeaderVisible()"
+                                       @change="toggleSlideHeader()"
+                                       class="w-4 h-4 mt-0.5 rounded text-indigo-600 bg-slate-950 border-slate-700 focus:ring-indigo-500 cursor-pointer">
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -546,7 +595,7 @@
             <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center mb-5">
                 <p class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">KODE PIN PRESENTASI</p>
                 <div class="text-3xl font-black text-amber-400 tracking-widest font-mono" x-text="formattedCode"></div>
-                <p class="text-[11px] text-slate-500 mt-1">Audiens dapat membuka <strong class="text-slate-300">spiritmeter.test/join</strong> dan memasukkan kode ini.</p>
+                <p class="text-[11px] text-slate-500 mt-1">Audiens dapat membuka <strong class="text-slate-300" x-text="window.location.host + '/join'">{{ request()->getHost() }}/join</strong> dan memasukkan kode ini.</p>
             </div>
 
             <!-- QR Code Canvas -->
@@ -732,6 +781,21 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
                 default:
                     return 'bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 border-slate-800 text-white';
             }
+        },
+
+        isHeaderVisible() {
+            if (!this.currentSlide) return true;
+            if (!this.currentSlide.settings) return true;
+            return this.currentSlide.settings.show_header !== false;
+        },
+
+        toggleSlideHeader() {
+            if (!this.currentSlide) return;
+            if (!this.currentSlide.settings) {
+                this.currentSlide.settings = {};
+            }
+            this.currentSlide.settings.show_header = !this.isHeaderVisible();
+            this.saveSlide();
         },
 
         addOption() {

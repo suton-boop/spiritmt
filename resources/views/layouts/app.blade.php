@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-50">
+<html lang="id" class="min-h-full bg-slate-50 scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'SpiritMeter - Presentasi Interaktif & Polling Real-time' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('image/logo-spiritmeter.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +23,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="h-full flex flex-col text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen flex flex-col text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
 
     <!-- Global Flash Notification -->
     @if(session('success'))
