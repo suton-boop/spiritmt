@@ -19,6 +19,15 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     PIN: <span x-text="formattedCode"></span>
                 </span>
+                <div class="hidden lg:flex items-center gap-1.5">
+                    <select x-model="presentation.folder_id" @change="savePresentationMeta()"
+                            class="bg-slate-800/90 hover:bg-slate-800 text-xs text-slate-300 font-medium border border-slate-700 rounded-lg px-2.5 py-1 focus:outline-none focus:border-indigo-500 transition-all cursor-pointer">
+                        <option value="">📂 Tanpa Folder</option>
+                        @foreach($folders as $f)
+                            <option value="{{ $f->id }}">📁 {{ $f->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -781,6 +790,18 @@
 
                     <!-- Options & Controls -->
                     <div class="pt-4 border-t border-slate-800 space-y-4">
+                        <!-- Presentation Folder Selector -->
+                        <label class="flex items-center justify-between cursor-pointer">
+                            <span class="text-xs font-medium text-slate-300">Folder Presentasi</span>
+                            <select x-model="presentation.folder_id" @change="savePresentationMeta()"
+                                    class="px-2.5 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold text-white focus:outline-none">
+                                <option value="">📂 Tanpa Folder</option>
+                                @foreach($folders as $f)
+                                    <option value="{{ $f->id }}">📁 {{ $f->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+
                         <label class="flex items-center justify-between cursor-pointer">
                             <span class="text-xs font-medium text-slate-300">Status Voting Slide</span>
                             <select x-model="presentation.voting_status" @change="savePresentationMeta()"
@@ -1865,6 +1886,7 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
                 body: JSON.stringify({
                     title: this.presentation.title,
                     theme: this.presentation.theme,
+                    folder_id: this.presentation.folder_id || null,
                     voting_status: this.presentation.voting_status
                 })
             }).then(r => r.json()).then(() => {

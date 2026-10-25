@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-full flex flex-col bg-slate-50" x-data="{ folderModal: false, templateModal: false }">
+<div class="min-h-full flex flex-col bg-slate-50" x-data="{ folderModal: false, templateModal: false, moveModal: false, moveActionUrl: '', selectedPresentationTitle: '', currentFolderId: '' }">
     <!-- Workspace Top Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
@@ -257,6 +257,12 @@
                                                     </button>
                                                 </form>
 
+                                                <button type="button" 
+                                                        @click="menuOpen = false; moveActionUrl = '{{ route('presentations.update', $p->id) }}'; selectedPresentationTitle = '{{ addslashes($p->title) }}'; currentFolderId = '{{ $p->folder_id ?? '' }}'; moveModal = true;" 
+                                                        class="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                                    <span>📁</span> Pindahkan Folder
+                                                </button>
+
                                                 <a href="{{ route('presentations.export', $p->id) }}" class="block px-3.5 py-2 text-slate-700 hover:bg-slate-50 flex items-center gap-2">
                                                     <span>📥</span> Ekspor CSV Hasil
                                                 </a>
@@ -400,6 +406,40 @@
                 </form>
 
             </div>
+        </div>
+    </div>
+
+    <!-- Move Presentation to Folder Modal -->
+    <div x-show="moveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+        <div @click.away="moveModal = false" class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-extrabold text-slate-900">Pindahkan ke Folder</h3>
+                <button @click="moveModal = false" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            <p class="text-xs text-slate-500 mb-5">
+                Pilih folder tujuan untuk presentasi <strong class="text-indigo-600" x-text="selectedPresentationTitle"></strong>:
+            </p>
+
+            <form :action="moveActionUrl" method="POST" class="space-y-4">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Pilih Folder</label>
+                    <select name="folder_id" x-model="currentFolderId" 
+                            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">📂 Tanpa Folder (Di Luar Folder)</option>
+                        @foreach($folders as $folder)
+                            <option value="{{ $folder->id }}">📁 {{ $folder->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" @click="moveModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20">Simpan Perubahan</button>
+                </div>
+            </form>
         </div>
     </div>
 

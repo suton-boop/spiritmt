@@ -96,6 +96,10 @@ class PresentationController extends Controller
             abort(403);
         }
 
+        if ($request->has('folder_id') && (empty($request->folder_id) || $request->folder_id === 'none')) {
+            $request->merge(['folder_id' => null]);
+        }
+
         $validated = $request->validate([
             'title' => ['sometimes', 'required', 'string', 'max:255'],
             'theme' => ['sometimes', 'required', 'string'],
