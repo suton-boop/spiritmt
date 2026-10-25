@@ -218,12 +218,17 @@
                                             <span>{{ $p->updated_at->diffForHumans() }}</span>
                                         </div>
 
-                                        @if($p->folder)
-                                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                                        <button type="button" 
+                                                @click="moveActionUrl = '{{ route('presentations.update', $p->id) }}'; selectedPresentationTitle = '{{ addslashes($p->title) }}'; currentFolderId = '{{ $p->folder_id ?? '' }}'; moveModal = true;"
+                                                title="Klik untuk memindahkan atau mengatur folder"
+                                                class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-all {{ $p->folder ? 'text-indigo-700 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100' : 'text-slate-500 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 border border-dashed border-slate-300' }}">
+                                            @if($p->folder)
                                                 <span class="w-2 h-2 rounded-full" style="background-color: {{ $p->folder->color }}"></span>
-                                                {{ $p->folder->name }}
-                                            </span>
-                                        @endif
+                                                <span>📁 {{ $p->folder->name }}</span>
+                                            @else
+                                                <span>📁 + Atur Folder</span>
+                                            @endif
+                                        </button>
                                     </div>
 
                                     <!-- Action Buttons -->
