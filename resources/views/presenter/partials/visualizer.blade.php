@@ -7,30 +7,41 @@
             <div class="w-full">
 
                 <!-- MODEL 1: BARS (Vertical Bar Columns - Mentimeter Style) -->
-                <div x-show="getVisualizationType() === 'bars'" class="w-full">
-                    <div class="w-full max-w-4xl mx-auto flex items-end justify-center gap-4 sm:gap-8 h-64 sm:h-80 px-4 pb-4">
+                <div x-show="getVisualizationType() === 'bars'" class="w-full flex flex-col items-center">
+                    <!-- 1. Bar Columns Stage (Grounded bottom) -->
+                    <div class="w-full max-w-4xl mx-auto flex items-end justify-center gap-4 sm:gap-8 h-44 sm:h-56 px-4">
                         <template x-for="(opt, idx) in getDisplayOptions(results.options)" :key="opt.id || idx">
-                            <div class="flex-1 flex flex-col items-center justify-end h-full max-w-[150px] group">
+                            <div class="flex-1 flex flex-col items-center justify-end h-full max-w-[160px] group">
                                 <!-- Count or Percentage on top -->
-                                <div class="mb-2.5 font-black font-mono text-xl sm:text-2xl transition-all"
+                                <div class="mb-2 font-black font-mono text-lg sm:text-2xl transition-all"
                                      :class="isLight() ? 'text-slate-900 drop-shadow-none' : 'text-white drop-shadow-md'"
                                      x-text="opt.displayValue"></div>
 
                                 <!-- Correct answer indicator for Quiz -->
                                 <span x-show="showCorrectAnswer && opt.is_correct" 
-                                      class="mb-2 px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-xs font-black uppercase tracking-wider animate-bounce shadow-lg">
+                                      class="mb-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider animate-bounce shadow-lg flex-shrink-0">
                                     ✓ Benar!
                                 </span>
 
                                 <!-- Vertical Bar Column -->
-                                <div class="w-full rounded-t-2xl sm:rounded-t-3xl transition-all duration-700 ease-out shadow-2xl relative overflow-hidden"
+                                <div class="w-full rounded-t-2xl sm:rounded-t-3xl transition-all duration-700 ease-out shadow-2xl relative overflow-hidden flex-shrink-0"
                                      :style="'background-color: ' + (opt.color || '#3b82f6') + '; height: ' + opt.barHeight + '%;'">
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/20 pointer-events-none"></div>
                                 </div>
+                            </div>
+                        </template>
+                    </div>
 
-                                <!-- Option Label underneath -->
-                                <div class="mt-3 text-sm sm:text-base font-bold text-center leading-tight transition-colors break-words line-clamp-3"
-                                     :class="isLight() ? 'text-slate-800' : 'text-slate-200'"
+                    <!-- 2. Baseline Divider Line (Mentimeter Chart Floor) -->
+                    <div class="w-full max-w-4xl mx-auto h-[2px] rounded-full my-3 transition-colors"
+                         :class="isLight() ? 'bg-slate-300/80' : 'bg-white/20'"></div>
+
+                    <!-- 3. Labels Row (Completely independent space below baseline) -->
+                    <div class="w-full max-w-4xl mx-auto flex items-start justify-center gap-4 sm:gap-8 px-4">
+                        <template x-for="(opt, idx) in getDisplayOptions(results.options)" :key="opt.id || idx">
+                            <div class="flex-1 max-w-[160px] text-center">
+                                <div class="text-xs sm:text-sm font-bold leading-snug break-words transition-colors"
+                                     :class="isLight() ? 'text-slate-800' : 'text-slate-100'"
                                      :title="opt.text"
                                      x-text="opt.text"></div>
                             </div>

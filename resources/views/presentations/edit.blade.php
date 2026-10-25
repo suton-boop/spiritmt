@@ -1513,7 +1513,7 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
                 const count = isSample ? (sampleCounts[idx % sampleCounts.length] || 2) : (Number(opt.count) || 0);
                 const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : (isSample ? Math.round((count / 5) * 100) : 0);
                 const displayValue = this.isPercentageMode() ? (percent + '%') : count;
-                const barHeight = Math.max(14, Math.round((count / maxVal) * 92));
+                const barHeight = Math.max(10, Math.round((count / maxVal) * 82));
 
                 return {
                     id: opt.id || idx,

@@ -121,7 +121,7 @@
                 </div>
 
                 <!-- Slide Question Title -->
-                <div class="mb-6 max-w-4xl w-full">
+                <div class="mb-3 sm:mb-5 max-w-4xl w-full">
                     <h1 class="transition-colors"
                         :class="[isLight() ? 'text-slate-900 drop-shadow-none' : 'text-white drop-shadow-md', getQuestionClasses(false)]"
                         x-text="currentSlide.question || 'SpiritMeter'"></h1>
@@ -636,7 +636,7 @@
                     const count = Number(opt.count) || 0;
                     const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
                     const displayValue = this.isPercentageMode() ? (percent + '%') : count;
-                    const barHeight = totalVotes > 0 ? Math.max(8, Math.round((count / maxVal) * 92)) : 6;
+                    const barHeight = totalVotes > 0 ? Math.max(10, Math.round((count / maxVal) * 82)) : 8;
 
                     return {
                         id: opt.id || idx,
@@ -741,12 +741,12 @@
             getQuestionClasses(isSide = false) {
                 const len = (this.currentSlide && this.currentSlide.question ? this.currentSlide.question.length : 0);
                 if (isSide) {
-                    if (len > 100) return 'text-xl sm:text-2xl lg:text-3xl font-black leading-snug break-words';
-                    if (len > 60) return 'text-2xl sm:text-3xl lg:text-4xl font-black leading-snug break-words';
+                    if (len > 100) return 'text-lg sm:text-xl lg:text-2xl font-extrabold leading-snug break-words';
+                    if (len > 60) return 'text-xl sm:text-2xl lg:text-3xl font-extrabold leading-snug break-words';
                     return 'text-2xl sm:text-4xl font-black leading-tight break-words';
                 }
-                if (len > 100) return 'text-2xl sm:text-3xl lg:text-4xl font-black leading-snug break-words';
-                if (len > 60) return 'text-3xl sm:text-4xl lg:text-5xl font-black leading-snug break-words';
+                if (len > 100) return 'text-xl sm:text-2xl lg:text-3xl font-extrabold leading-snug break-words';
+                if (len > 60) return 'text-2xl sm:text-3xl lg:text-4xl font-extrabold leading-snug break-words';
                 return 'text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight break-words';
             },
 

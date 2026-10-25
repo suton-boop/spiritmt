@@ -4,24 +4,35 @@
     <template x-if="currentSlide.type === 'multiple_choice' || currentSlide.type === 'quiz'">
         <div class="w-full">
             
-            <!-- MODEL 1: BARS (Vertical Bar Columns) -->
-            <div x-show="getVisualizationType() === 'bars'" class="w-full">
-                <div class="w-full flex items-end justify-center gap-3 sm:gap-6 h-52 sm:h-60 px-2 pb-2">
+            <!-- MODEL 1: BARS (Vertical Bar Columns - Mentimeter Style) -->
+            <div x-show="getVisualizationType() === 'bars'" class="w-full flex flex-col items-center">
+                <!-- 1. Bar Columns Stage -->
+                <div class="w-full flex items-end justify-center gap-3 sm:gap-6 h-36 sm:h-44 px-2">
                     <template x-for="(opt, idx) in getDisplayOptions()" :key="opt.id || idx">
                         <div class="flex-1 flex flex-col items-center justify-end h-full max-w-[120px]">
                             <!-- Count or Percentage on top -->
-                            <div class="mb-2 font-black font-mono text-sm sm:text-base transition-colors"
+                            <div class="mb-1.5 font-black font-mono text-xs sm:text-sm transition-colors"
                                  :class="presentation.theme === 'light_tech' ? 'text-slate-900' : 'text-white'"
                                  x-text="opt.displayValue"></div>
 
                             <!-- Vertical Bar -->
-                            <div class="w-full rounded-t-xl sm:rounded-t-2xl transition-all duration-700 ease-out shadow-md relative overflow-hidden"
+                            <div class="w-full rounded-t-xl sm:rounded-t-2xl transition-all duration-700 ease-out shadow-md relative overflow-hidden flex-shrink-0"
                                  :style="'background-color: ' + (opt.color || '#3b82f6') + '; height: ' + opt.barHeight + '%;'">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-white/10 pointer-events-none"></div>
                             </div>
+                        </div>
+                    </template>
+                </div>
 
-                            <!-- Option Text Label below -->
-                            <div class="mt-2 text-xs font-bold text-center leading-tight transition-colors break-words line-clamp-3"
+                <!-- 2. Baseline Divider Line -->
+                <div class="w-full h-[1.5px] rounded-full my-2 transition-colors"
+                     :class="presentation.theme === 'light_tech' ? 'bg-slate-300' : 'bg-white/20'"></div>
+
+                <!-- 3. Labels Row below baseline -->
+                <div class="w-full flex items-start justify-center gap-3 sm:gap-6 px-2">
+                    <template x-for="(opt, idx) in getDisplayOptions()" :key="opt.id || idx">
+                        <div class="flex-1 max-w-[120px] text-center">
+                            <div class="text-[11px] sm:text-xs font-bold leading-tight break-words transition-colors"
                                  :class="presentation.theme === 'light_tech' ? 'text-slate-800' : 'text-slate-200'"
                                  :title="opt.text"
                                  x-text="opt.text"></div>
