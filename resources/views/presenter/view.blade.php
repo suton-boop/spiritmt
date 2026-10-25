@@ -36,6 +36,29 @@
         <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-all duration-500"
              :class="isLight() ? 'bg-sky-400/20' : 'bg-teal-500/10'"></div>
 
+        <!-- FLOATING TOP-LEFT: Close (X) and Fullscreen Buttons (Mentimeter Style) -->
+        <div class="fixed top-4 left-4 z-40 flex items-center gap-2">
+            <!-- Close / Exit Presentation Button (X) -->
+            <button @click="showEndModal = true" 
+                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-lg hover:scale-105"
+                    :class="isLight() ? 'bg-white/90 hover:bg-white border-slate-300 text-slate-700 hover:text-rose-600' : 'bg-slate-900/80 hover:bg-slate-900 border-white/15 text-slate-200 hover:text-rose-400'"
+                    title="Tutup Layar / Akhiri Presentasi (Esc)">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- Fullscreen Toggle Button (⤢) -->
+            <button @click="toggleFullscreen()" 
+                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-all shadow-lg hover:scale-105"
+                    :class="isLight() ? 'bg-white/90 hover:bg-white border-slate-300 text-slate-700' : 'bg-slate-900/80 hover:bg-slate-900 border-white/15 text-slate-200 hover:text-white'"
+                    title="Layar Penuh (F)">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+            </button>
+        </div>
+
         <!-- Floating Quick Show Header Trigger when hidden -->
         <div x-show="!showJoinBar" 
              x-transition:enter="transition ease-out duration-300"
@@ -59,7 +82,7 @@
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0"
                 x-transition:leave-end="opacity-0 -translate-y-4"
-                class="relative z-20 flex items-center justify-between pb-4 border-b transition-colors"
+                class="relative z-20 flex items-center justify-between pb-4 border-b transition-colors pl-24 sm:pl-28"
                 :class="isLight() ? 'border-blue-200/60' : 'border-white/10'">
             <div class="flex items-center gap-4">
                 <a href="{{ route('dashboard') }}" 
@@ -201,17 +224,26 @@
         </main>
 
         <!-- FLOATING BOTTOM PRESENTER DOCK -->
-        <footer class="relative z-30 flex items-center justify-between pt-4 border-t transition-colors"
+        <footer class="relative z-30 flex items-center justify-between pt-4 border-t transition-colors gap-2 flex-wrap sm:flex-nowrap"
                 :class="isLight() ? 'border-blue-200/60' : 'border-white/10'">
-            <!-- Left: Response count -->
-            <div class="flex items-center gap-3">
-                <span class="px-4 py-2 rounded-xl border text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
+            <!-- Left: End presentation & Response count -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- End presentation Pill Button (Mentimeter Style) -->
+                <button @click="showEndModal = true" 
+                        class="px-3.5 py-2 rounded-xl sm:rounded-2xl border text-xs font-bold transition-all shadow-md flex items-center gap-1.5 hover:scale-105"
+                        :class="isLight() ? 'bg-white hover:bg-rose-50 border-slate-300 text-slate-700 hover:text-rose-600' : 'bg-slate-900/90 hover:bg-rose-950/60 border-white/15 text-slate-300 hover:text-rose-300'"
+                        title="Akhiri dan Tutup Layar Presentasi (Esc)">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span>End presentation</span>
+                </button>
+
+                <span class="px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-bold flex items-center gap-2 shadow-sm"
                       :class="isLight() ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span x-text="state.slide_responses"></span> Respons Masuk
                 </span>
 
-                <span class="px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm"
+                <span class="px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm hidden md:inline-block"
                       :class="isLight() ? 'bg-white border border-blue-200/80 text-slate-700' : 'bg-white/10 text-slate-300'"
                       x-text="state.voting_status === 'open' ? '🟢 Voting Terbuka' : '🔴 Voting Ditutup'"></span>
             </div>
@@ -378,6 +410,31 @@
         </div>
     </div>
 
+    <!-- END PRESENTATION / TUTUP LAYAR MODAL -->
+    <div x-show="showEndModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md">
+        <div @click.away="showEndModal = false" class="bg-slate-900 border border-white/20 rounded-3xl p-7 max-w-md w-full text-center shadow-2xl text-white">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl mx-auto mb-4 border border-rose-500/30">
+                ⏹️
+            </div>
+            <h2 class="text-xl font-black mb-2">Akhiri Presentasi?</h2>
+            <p class="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+                Apakah Anda ingin menutup layar presentasi ini? Anda bisa kembali ke Dashboard atau membuka halaman Studio Editor.
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center gap-2.5 justify-center">
+                <button @click="showEndModal = false" class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs sm:text-sm transition-all">
+                    Batal
+                </button>
+                <a href="{{ route('presentations.edit', $presentation->id) }}" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-lg flex items-center justify-center gap-1.5">
+                    <span>✏️ Edit Studio</span>
+                </a>
+                <button @click="endPresentation()" class="w-full sm:w-auto px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5">
+                    <span>Tutup & Dashboard</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
     function presenterApp(presentationId, csrfToken) {
         return {
@@ -396,6 +453,7 @@
             showCorrectAnswer: false,
             showQrModal: false,
             showResetModal: false,
+            showEndModal: false,
             showJoinBar: true,
             _joinBarUserToggled: false,
             pollingInterval: null,
@@ -538,7 +596,27 @@
                         this.showCorrectAnswer = !this.showCorrectAnswer;
                         if (this.showCorrectAnswer) this.triggerConfetti();
                     }
+                } else if (e.key === 'Escape') {
+                    if (this.showQrModal) {
+                        this.showQrModal = false;
+                    } else if (this.showResetModal) {
+                        this.showResetModal = false;
+                    } else if (this.showEndModal) {
+                        this.showEndModal = false;
+                    } else {
+                        this.showEndModal = true;
+                    }
                 }
+            },
+
+            endPresentation() {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+                try {
+                    window.close();
+                } catch(err) {}
+                window.location.href = "{{ route('dashboard') }}";
             },
 
             hasCorrectAnswer() {
