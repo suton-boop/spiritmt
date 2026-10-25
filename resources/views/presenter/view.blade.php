@@ -313,6 +313,14 @@
                     </svg>
                 </button>
 
+                <!-- Reset Responses / Mulai Sesi Baru -->
+                <button @click="showResetModal = true" 
+                        class="p-2.5 rounded-xl border transition-all" 
+                        :class="isLight() ? 'bg-white hover:bg-rose-50 border-blue-200 text-slate-700 hover:text-rose-600 shadow-sm' : 'bg-white/10 hover:bg-rose-500/20 border-transparent text-white hover:text-rose-400'"
+                        title="Reset Respon / Mulai Sesi Baru">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+
                 <!-- Fullscreen Toggle -->
                 <button @click="toggleFullscreen()" 
                         class="p-2.5 rounded-xl border transition-all" 
@@ -345,6 +353,28 @@
         </div>
     </div>
 
+    <!-- RESET RESPONSES MODAL -->
+    <div x-show="showResetModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md">
+        <div @click.away="showResetModal = false" class="bg-slate-900 border border-white/20 rounded-3xl p-7 max-w-md w-full text-center shadow-2xl text-white">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl mx-auto mb-4 border border-amber-500/30">
+                🔄
+            </div>
+            <h2 class="text-xl font-black mb-2">Mulai Sesi / Kegiatan Baru?</h2>
+            <p class="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+                Semua hasil polling, respon kata, dan skor quiz saat ini akan di-reset (0 respon) agar siap digunakan untuk peserta baru.
+            </p>
+
+            <div class="flex items-center gap-3 justify-center">
+                <button @click="showResetModal = false" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs sm:text-sm transition-all">
+                    Batal
+                </button>
+                <button @click="resetResponses()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-rose-600/30 flex items-center gap-2">
+                    <span>Ya, Reset Respon</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
     function presenterApp(presentationId, csrfToken) {
         return {
@@ -362,6 +392,7 @@
             allSlides: @json($presentation->slides),
             showCorrectAnswer: false,
             showQrModal: false,
+            showResetModal: false,
             showJoinBar: true,
             _joinBarUserToggled: false,
             pollingInterval: null,
@@ -452,6 +483,25 @@
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
                 }).then(() => this.fetchLiveState());
+            },
+
+            resetResponses() {
+                fetch('/presentations/' + this.presentationId + '/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    this.showResetModal = false;
+                    this.fetchLiveState();
+                })
+                .catch(() => {
+                    alert('Gagal mereset respon');
+                });
             },
 
             toggleFullscreen() {

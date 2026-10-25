@@ -35,6 +35,24 @@
                 <span>Bagikan</span>
             </button>
 
+            <!-- More Options (Export, Reset) -->
+            <div class="relative" x-data="{ optionsOpen: false }">
+                <button @click="optionsOpen = !optionsOpen" 
+                        class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-all" 
+                        title="Opsi Kegiatan & Respon">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </button>
+                <div x-show="optionsOpen" @click.away="optionsOpen = false" x-cloak
+                     class="absolute right-0 mt-2 w-52 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 py-1.5 z-50 text-xs font-semibold text-slate-200">
+                    <a :href="'/presentations/' + presentation.id + '/export'" class="flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-700 transition-colors">
+                        <span>📥</span> Ekspor CSV Hasil
+                    </a>
+                    <button @click="optionsOpen = false; if(confirm('Reset semua respon peserta saat ini agar siap untuk kegiatan baru?')) { resetPresentationResponses(); }" class="w-full text-left flex items-center gap-2.5 px-3.5 py-2 text-rose-400 hover:bg-rose-500/10 transition-colors">
+                        <span>🔄</span> Reset Respon Peserta
+                    </button>
+                </div>
+            </div>
+
             <!-- Live Present Button -->
             <a :href="'/presentations/' + presentation.id + '/present'" target="_blank"
                class="px-4 sm:px-5 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all">
@@ -1313,6 +1331,25 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
 
         selectSlide(id) {
             this.currentSlideId = id;
+        },
+
+        resetPresentationResponses() {
+            fetch('/presentations/' + this.presentation.id + '/reset', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert('Semua respon peserta berhasil direset (0 respon). Siap digunakan untuk kegiatan baru!');
+                window.location.reload();
+            })
+            .catch(() => {
+                alert('Gagal mereset respon');
+            });
         },
 
         previousSlide() {
