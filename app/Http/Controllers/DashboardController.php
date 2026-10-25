@@ -19,9 +19,16 @@ class DashboardController extends Controller
         $user = Auth::user();
         $folderId = $request->query('folder');
         $search = $request->query('search');
+        $nonQuestionTypes = ['content_heading', 'content_paragraph', 'content_bullets', 'instructions', 'leaderboard'];
 
         $query = Presentation::with(['folder', 'slides'])
-            ->withCount(['slides', 'responses'])
+            ->withCount([
+                'slides',
+                'responses',
+                'slides as questions_count' => function ($q) use ($nonQuestionTypes) {
+                    $q->whereNotIn('type', $nonQuestionTypes);
+                },
+            ])
             ->where('user_id', $user->id);
 
         if ($folderId) {

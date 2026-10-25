@@ -192,9 +192,14 @@
                                             PIN: {{ $p->getFormattedCode() }}
                                         </span>
 
-                                        <span class="px-2 py-0.5 rounded-md bg-white/10 text-[11px] font-bold text-slate-300">
-                                            {{ $p->slides_count }} Slide
-                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="px-2 py-0.5 rounded-md bg-white/10 text-[11px] font-bold text-slate-300">
+                                                {{ $p->slides_count }} Slide
+                                            </span>
+                                            <span class="px-2 py-0.5 rounded-md bg-indigo-500/30 text-[11px] font-bold text-indigo-200 border border-indigo-400/30">
+                                                {{ $p->questions_count }} Soal
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <div class="relative z-10">
@@ -210,12 +215,17 @@
                                 <!-- Card Body -->
                                 <div class="p-5 flex-1 flex flex-col justify-between">
                                     <div class="mb-4">
-                                        <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
-                                            <span class="flex items-center gap-1 font-semibold">
-                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                                {{ $p->responses_count }} respon
-                                            </span>
-                                            <span>{{ $p->updated_at->diffForHumans() }}</span>
+                                        <div class="flex items-center justify-between text-xs text-slate-500 mb-2.5">
+                                            <div class="flex items-center gap-2">
+                                                <span class="inline-flex items-center gap-1 font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md text-[11px]">
+                                                    <span>📝</span> {{ $p->questions_count }} Soal
+                                                </span>
+                                                <span class="flex items-center gap-1 font-semibold text-slate-600 text-[11px]">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                                    {{ $p->responses_count }} respon
+                                                </span>
+                                            </div>
+                                            <span class="text-[11px] text-slate-400">{{ $p->updated_at->diffForHumans() }}</span>
                                         </div>
 
                                         <button type="button" 

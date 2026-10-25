@@ -113,4 +113,28 @@ class Presentation extends Model
 
         return $code;
     }
+
+    /**
+     * Count of question / interactive polling slides in the presentation.
+     */
+    public function getQuestionsCountAttribute(): int
+    {
+        if (array_key_exists('questions_count', $this->attributes)) {
+            return (int) $this->attributes['questions_count'];
+        }
+
+        $nonQuestionTypes = [
+            'content_heading',
+            'content_paragraph',
+            'content_bullets',
+            'instructions',
+            'leaderboard',
+        ];
+
+        if ($this->relationLoaded('slides')) {
+            return $this->slides->whereNotIn('type', $nonQuestionTypes)->count();
+        }
+
+        return $this->slides()->whereNotIn('type', $nonQuestionTypes)->count();
+    }
 }

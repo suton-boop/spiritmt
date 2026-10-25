@@ -19,6 +19,11 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                     PIN: <span x-text="formattedCode"></span>
                 </span>
+                <span class="text-xs text-slate-400 font-mono hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-800/70 border border-slate-700">
+                    <span class="text-slate-200 font-bold" x-text="slides.length + ' Slide'"></span>
+                    <span class="text-slate-500">&bull;</span>
+                    <span class="text-amber-300 font-bold" x-text="getQuestionsCount() + ' Soal'"></span>
+                </span>
                 <div class="hidden lg:flex items-center gap-1.5">
                     <select x-model="presentation.folder_id" @change="savePresentationMeta()"
                             class="bg-slate-800/90 hover:bg-slate-800 text-xs text-slate-300 font-medium border border-slate-700 rounded-lg px-2.5 py-1 focus:outline-none focus:border-indigo-500 transition-all cursor-pointer">
@@ -113,8 +118,9 @@
                         <div class="h-20 bg-slate-950 rounded-xl p-2 border border-slate-800/80 flex flex-col justify-between overflow-hidden">
                             <div class="text-[11px] font-bold text-slate-200 line-clamp-2 leading-tight" x-text="slide.question || 'Slide Tanpa Judul'"></div>
                             
-                            <div class="flex items-center gap-1 text-[9px] text-slate-500">
+                            <div class="flex items-center justify-between text-[9px] text-slate-500">
                                 <span x-text="slide.type"></span>
+                                <span x-show="isQuestionType(slide.type)" class="text-amber-400 font-bold" x-text="'Soal #' + getQuestionNumber(index)"></span>
                             </div>
                         </div>
                     </div>
@@ -1352,6 +1358,26 @@ function presentationStudio(presentationData, slidesData, csrfToken) {
 
         selectSlide(id) {
             this.currentSlideId = id;
+        },
+
+        isQuestionType(type) {
+            const nonQ = ['content_heading', 'content_paragraph', 'content_bullets', 'instructions', 'leaderboard'];
+            return !nonQ.includes(type);
+        },
+
+        getQuestionNumber(index) {
+            let qCount = 0;
+            for (let i = 0; i <= index; i++) {
+                if (this.slides[i] && this.isQuestionType(this.slides[i].type)) {
+                    qCount++;
+                }
+            }
+            return qCount;
+        },
+
+        getQuestionsCount() {
+            if (!this.slides) return 0;
+            return this.slides.filter(s => this.isQuestionType(s.type)).length;
         },
 
         resetPresentationResponses() {
