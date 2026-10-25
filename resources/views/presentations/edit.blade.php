@@ -115,11 +115,17 @@
                         </div>
 
                         <!-- Slide Mini Preview Canvas -->
-                        <div class="h-20 bg-slate-950 rounded-xl p-2 border border-slate-800/80 flex flex-col justify-between overflow-hidden">
-                            <div class="text-[11px] font-bold text-slate-200 line-clamp-2 leading-tight" x-text="slide.question || 'Slide Tanpa Judul'"></div>
+                        <div class="h-20 bg-slate-950 rounded-xl p-2 border border-slate-800/80 flex flex-col justify-between overflow-hidden relative">
+                            <template x-if="slide.settings?.content_image">
+                                <div class="absolute inset-0 bg-cover bg-center opacity-25" :style="'background-image: url(' + slide.settings.content_image + ')'"></div>
+                            </template>
+                            <div class="text-[11px] font-bold text-slate-200 line-clamp-2 leading-tight relative z-10" x-text="slide.question || 'Slide Tanpa Judul'"></div>
                             
-                            <div class="flex items-center justify-between text-[9px] text-slate-500">
-                                <span x-text="slide.type"></span>
+                            <div class="flex items-center justify-between text-[9px] text-slate-500 relative z-10">
+                                <span class="flex items-center gap-1">
+                                    <span x-text="slide.type"></span>
+                                    <span x-show="slide.settings?.content_image" class="text-indigo-400" title="Ada Gambar Soal">📷</span>
+                                </span>
                                 <span x-show="isQuestionType(slide.type)" class="text-amber-400 font-bold" x-text="'Soal #' + getQuestionNumber(index)"></span>
                             </div>
                         </div>
@@ -476,33 +482,42 @@
                     </div>
 
                     <!-- Quick Image Attachment in Content Tab -->
-                    <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-2">
+                    <div class="p-3.5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all space-y-2.5">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2.5">
                                 <div class="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </div>
                                 <div>
-                                    <span class="text-xs font-bold text-white block">Content Image (Gambar Materi / Soal)</span>
-                                    <span class="text-[10px] text-slate-400 block">Tampilkan gambar ilustrasi di dalam slide</span>
+                                    <span class="text-xs font-bold text-white block">Gambar / Foto Soal</span>
+                                    <span class="text-[10px] text-slate-400 block">Sertakan ilustrasi, bagan, atau diagram pada slide</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- If image is NOT attached: Big Upload Button -->
+                        <div x-show="!currentSlide.settings?.content_image">
                             <button type="button" @click="openImageModal('content')"
-                                    class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-300 border border-slate-700 flex items-center justify-center transition-all text-base font-bold shadow-sm"
-                                    title="Tambah / Ganti Gambar Materi">
-                                +
+                                    class="w-full py-2.5 px-3 rounded-xl border border-dashed border-indigo-500/50 hover:border-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm">
+                                <span>📷</span>
+                                <span>+ Unggah Gambar / Foto Soal</span>
                             </button>
                         </div>
+
+                        <!-- If image IS attached: Preview & Controls -->
                         <div x-show="currentSlide.settings?.content_image" class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <img :src="currentSlide.settings?.content_image" alt="Preview" class="w-8 h-8 rounded-lg object-cover border border-slate-700 bg-slate-950 flex-shrink-0">
-                                <span class="text-[11px] text-emerald-400 font-medium truncate">✓ Gambar Terpasang</span>
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <img :src="currentSlide.settings?.content_image" alt="Preview" class="w-10 h-10 rounded-lg object-cover border border-slate-700 bg-slate-950 flex-shrink-0">
+                                <div>
+                                    <span class="text-[11px] text-emerald-400 font-bold block">✓ Gambar Terpasang</span>
+                                    <span class="text-[10px] text-slate-400 block truncate max-w-[140px]">Tampil di presenter & peserta</span>
+                                </div>
                             </div>
                             <div class="flex items-center gap-1.5">
-                                <button type="button" @click="openImageModal('content')" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 px-2 py-0.5 rounded hover:bg-slate-800">
+                                <button type="button" @click="openImageModal('content')" class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 px-2 py-1 rounded-lg hover:bg-slate-800 border border-slate-700">
                                     Ganti
                                 </button>
-                                <button type="button" @click="removeImage('content')" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-0.5 rounded hover:bg-slate-800">
+                                <button type="button" @click="removeImage('content')" class="text-[11px] font-bold text-rose-400 hover:text-rose-300 px-2 py-1 rounded-lg hover:bg-slate-800 border border-slate-700">
                                     Hapus
                                 </button>
                             </div>

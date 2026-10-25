@@ -183,9 +183,18 @@
                             <div class="bg-white rounded-3xl border border-slate-200/90 hover:border-indigo-300 hover:shadow-xl transition-all duration-200 flex flex-col overflow-hidden group">
                                 
                                 <!-- Card Thumbnail Preview -->
+                                @php
+                                    $coverImageSlide = $p->slides->first(fn($s) => !empty($s->settings['content_image']) || !empty($s->settings['background_image']));
+                                    $coverUrl = $coverImageSlide?->settings['content_image'] ?? $coverImageSlide?->settings['background_image'] ?? null;
+                                @endphp
                                 <a href="{{ route('presentations.edit', $p->id) }}" class="relative h-36 bg-slate-900 p-4 flex flex-col justify-between overflow-hidden">
-                                    <!-- Background subtle gradient based on theme -->
-                                    <div class="absolute inset-0 bg-gradient-to-tr from-indigo-950 via-slate-900 to-indigo-900 opacity-90"></div>
+                                    @if($coverUrl)
+                                        <div class="absolute inset-0 bg-cover bg-center opacity-45 group-hover:scale-105 transition-transform duration-300" style="background-image: url('{{ $coverUrl }}');"></div>
+                                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent"></div>
+                                    @else
+                                        <!-- Background subtle gradient based on theme -->
+                                        <div class="absolute inset-0 bg-gradient-to-tr from-indigo-950 via-slate-900 to-indigo-900 opacity-90"></div>
+                                    @endif
                                     
                                     <div class="relative z-10 flex items-center justify-between">
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 backdrop-blur-md text-[11px] font-mono font-bold text-amber-300 border border-white/10">
