@@ -275,10 +275,13 @@
 
             <!-- Right: Interactive Controls -->
             <div class="flex items-center gap-2">
-                <!-- Toggle Reveal Correct Answer (for Quiz) -->
-                <button x-show="currentSlide.type === 'quiz'" @click="showCorrectAnswer = !showCorrectAnswer; triggerConfetti()"
-                        class="px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-sm">
-                    🎉 Kunci Jawaban
+                <!-- Toggle Reveal Correct Answer (for Quiz / Multiple Choice) -->
+                <button x-show="hasCorrectAnswer() || currentSlide.type === 'quiz'" 
+                        @click="showCorrectAnswer = !showCorrectAnswer; if(showCorrectAnswer) triggerConfetti()"
+                        :class="showCorrectAnswer ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/30 ring-2 ring-emerald-300' : 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-400/30'"
+                        class="px-3 py-2 rounded-xl text-xs font-black transition-all shadow-sm flex items-center gap-1.5"
+                        :title="showCorrectAnswer ? 'Sembunyikan Kunci Jawaban (K)' : 'Tampilkan Kunci Jawaban (K)'">
+                    <span x-text="showCorrectAnswer ? '🙈 Sembunyikan Kunci' : '🎉 Kunci Jawaban'"></span>
                 </button>
 
                 <!-- Toggle Close/Open Voting -->
@@ -530,7 +533,17 @@
                 } else if (e.key.toLowerCase() === 'h') {
                     this.showJoinBar = !this.showJoinBar;
                     this._joinBarUserToggled = true;
+                } else if (e.key.toLowerCase() === 'k') {
+                    if (this.hasCorrectAnswer() || this.currentSlide.type === 'quiz') {
+                        this.showCorrectAnswer = !this.showCorrectAnswer;
+                        if (this.showCorrectAnswer) this.triggerConfetti();
+                    }
                 }
+            },
+
+            hasCorrectAnswer() {
+                const opts = (this.currentSlide && this.currentSlide.options) || (this.results && this.results.options) || [];
+                return opts.some(o => o.is_correct === true || o.is_correct === 1 || o.is_correct === '1');
             },
 
             triggerConfetti() {

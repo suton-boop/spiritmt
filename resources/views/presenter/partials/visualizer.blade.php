@@ -40,10 +40,12 @@
                     <div class="w-full max-w-4xl mx-auto flex items-start justify-center gap-4 sm:gap-8 px-4">
                         <template x-for="(opt, idx) in getDisplayOptions(results.options)" :key="opt.id || idx">
                             <div class="flex-1 max-w-[160px] text-center">
-                                <div class="text-xs sm:text-sm font-bold leading-snug break-words transition-colors"
-                                     :class="isLight() ? 'text-slate-800' : 'text-slate-100'"
-                                     :title="opt.text"
-                                     x-text="opt.text"></div>
+                                <div class="text-xs sm:text-sm font-bold leading-snug break-words transition-colors flex items-center justify-center gap-1"
+                                     :class="showCorrectAnswer && opt.is_correct ? 'text-emerald-400 font-black' : (isLight() ? 'text-slate-800' : 'text-slate-100')"
+                                     :title="opt.text">
+                                    <span x-show="showCorrectAnswer && opt.is_correct" class="text-emerald-400 text-xs font-black">✓</span>
+                                    <span x-text="opt.text"></span>
+                                </div>
                             </div>
                         </template>
                     </div>
