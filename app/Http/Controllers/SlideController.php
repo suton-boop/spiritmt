@@ -61,13 +61,17 @@ class SlideController extends Controller
             abort(403);
         }
 
+        $type = $request->input('type', $slide->type);
+        $isContent = in_array($type, ['content_heading', 'content_paragraph']);
+
         $validated = $request->validate([
             'type' => ['sometimes', 'required', 'string'],
-            'question' => ['sometimes', 'nullable', 'string', 'max:500'],
-            'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'question' => ['sometimes', 'nullable', 'string', $isContent ? 'max:250' : 'max:150'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:800'],
             'options' => ['sometimes', 'nullable', 'array'],
+            'options.*.text' => ['sometimes', 'nullable', 'string', 'max:60'],
             'settings' => ['sometimes', 'nullable', 'array'],
-            'notes' => ['sometimes', 'nullable', 'string'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
         ]);
 
         $slide->update($validated);

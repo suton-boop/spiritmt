@@ -28,7 +28,7 @@
     <!-- Screen Background Theme Wrapper -->
     <div class="h-full w-full flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden transition-all duration-500"
          :class="getThemeBackground()"
-         :style="currentSlide.settings?.background_image ? 'background-image: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.85)), url(' + currentSlide.settings.background_image + '); background-size: cover; background-position: center;' : ''">
+         :style="getThemeStyle()">
 
         <!-- Decorative background elements -->
         <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-all duration-500"
@@ -111,231 +111,93 @@
         </header>
 
         <!-- MAIN PRESENTATION CANVAS -->
-        <main class="flex-1 flex flex-col items-center justify-center py-6 px-4 text-center relative z-10 w-full max-w-6xl mx-auto overflow-y-auto">
+        <main class="flex-1 flex flex-col items-center justify-center py-6 px-4 text-center relative z-10 w-full max-w-7xl mx-auto overflow-y-auto">
             
-            <!-- Slide Question Title -->
-            <div class="mb-6 max-w-4xl">
-                <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight transition-colors"
-                    :class="isLight() ? 'text-slate-900 drop-shadow-none' : 'text-white drop-shadow-md'"
-                    x-text="currentSlide.question || 'SpiritMeter'"></h1>
-                
-                <p class="mt-3 text-base sm:text-lg font-medium max-w-2xl mx-auto transition-colors"
-                   :class="isLight() ? 'text-slate-600' : 'text-slate-300'"
-                   x-show="currentSlide.description" x-text="currentSlide.description"></p>
-
-                <!-- Content Image if any -->
-                <div x-show="currentSlide.settings?.content_image" class="mt-5 max-w-md mx-auto">
-                    <img :src="currentSlide.settings?.content_image" alt="Content Image" 
-                         class="max-h-52 sm:max-h-60 w-auto mx-auto rounded-3xl object-contain shadow-2xl border border-white/20 bg-slate-900/60">
+            <!-- A. Stacked Layouts (Center, Top Banner, or No Content Image) -->
+            <div x-show="!isSideLayout()" class="w-full flex-1 flex flex-col items-center justify-center text-center max-w-5xl mx-auto transition-all">
+                <!-- Top Banner (if layout === 'banner' and image exists) -->
+                <div x-show="getImageLayout() === 'banner' && currentSlide.settings?.content_image" class="w-full max-h-56 sm:max-h-72 rounded-3xl overflow-hidden mb-6 shadow-2xl border border-white/20 bg-slate-950 flex-shrink-0">
+                    <img :src="currentSlide.settings?.content_image" alt="Banner Image" class="w-full h-full object-cover">
                 </div>
+
+                <!-- Slide Question Title -->
+                <div class="mb-6 max-w-4xl w-full">
+                    <h1 class="transition-colors"
+                        :class="[isLight() ? 'text-slate-900 drop-shadow-none' : 'text-white drop-shadow-md', getQuestionClasses(false)]"
+                        x-text="currentSlide.question || 'SpiritMeter'"></h1>
+                    
+                    <p class="mt-3 font-medium max-w-3xl mx-auto transition-colors"
+                       :class="[isLight() ? 'text-slate-600' : 'text-slate-300', getDescriptionClasses()]"
+                       x-show="currentSlide.type !== 'content_paragraph' && currentSlide.description" x-text="currentSlide.description"></p>
+
+                    <!-- Text Slide Content (Materi) Card -->
+                    <div x-show="currentSlide.type === 'content_paragraph' && currentSlide.description"
+                         class="mt-6 max-w-3xl mx-auto p-6 sm:p-8 rounded-3xl backdrop-blur-md border text-left shadow-2xl transition-all"
+                         :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5 text-slate-800' : 'bg-slate-900/80 border-white/10 text-slate-100'">
+                        <div :class="getContentParagraphClasses()" class="whitespace-pre-line leading-relaxed" x-text="currentSlide.description"></div>
+                    </div>
+
+                    <!-- Center Image (if layout !== 'banner' and image exists) -->
+                    <div x-show="getImageLayout() !== 'banner' && currentSlide.settings?.content_image" class="mt-5 max-w-md mx-auto">
+                        <img :src="currentSlide.settings?.content_image" alt="Content Image" 
+                             class="max-h-52 sm:max-h-64 w-auto mx-auto rounded-3xl object-contain shadow-2xl border border-white/20 bg-slate-900/60">
+                    </div>
+                </div>
+
+                <!-- Live Results Visualizer (Stacked) -->
+                @include('presenter.partials.visualizer')
             </div>
 
-            <!-- Dynamic Presentation Visualizer based on Type -->
-            <div class="w-full flex-1 flex items-center justify-center" x-show="state.show_results">
+            <!-- B. Side Layouts (Left, Right, Split 50:50, Sidebar) -->
+            <div x-show="isSideLayout()" 
+                 class="w-full flex-1 flex flex-col md:flex-row items-center justify-center gap-8 lg:gap-12 max-w-7xl mx-auto transition-all"
+                 :class="isLeftImage() ? 'md:flex-row' : 'md:flex-row-reverse'">
                 
-                <!-- 1. MULTIPLE CHOICE / QUIZ (Bar & Donut Charts) -->
-                <template x-if="currentSlide.type === 'multiple_choice' || currentSlide.type === 'quiz'">
-                    <div class="w-full max-w-3xl space-y-4">
-                        <template x-for="(opt, idx) in (results.options || [])" :key="opt.id || idx">
-                            <div class="backdrop-blur-md rounded-2xl p-4 sm:p-5 border shadow-xl transition-all relative overflow-hidden flex flex-col gap-2"
-                                 :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5 hover:border-blue-300' : 'bg-slate-900/80 border-white/10'">
-                                <!-- Progress fill bar in background -->
-                                <div class="absolute inset-y-0 left-0 rounded-2xl transition-all duration-700 ease-out"
-                                     :class="isLight() ? 'opacity-20' : 'opacity-25'"
-                                     :style="'background-color: ' + (opt.color || '#2563eb') + '; width: ' + (opt.percentage || 0) + '%;'"></div>
+                <!-- Image Column -->
+                <div :class="{
+                        'w-full md:w-1/2': getImageLayout() === 'split_left' || getImageLayout() === 'split_right',
+                        'w-full md:w-1/4': getImageLayout() === 'sidebar_left' || getImageLayout() === 'sidebar_right',
+                        'w-full md:w-5/12': getImageLayout() === 'left' || getImageLayout() === 'right'
+                     }"
+                     class="flex items-center justify-center flex-shrink-0">
+                    <img :src="currentSlide.settings?.content_image" alt="Content Image"
+                         :class="{
+                            'w-full h-80 sm:h-96 object-cover rounded-3xl': getImageLayout() === 'split_left' || getImageLayout() === 'split_right' || getImageLayout() === 'sidebar_left' || getImageLayout() === 'sidebar_right',
+                            'max-h-80 sm:max-h-96 w-auto object-contain rounded-3xl': getImageLayout() === 'left' || getImageLayout() === 'right'
+                         }"
+                         class="shadow-2xl border border-white/20 bg-slate-900/60">
+                </div>
 
-                                <div class="relative z-10 flex items-center justify-between text-left">
-                                    <div class="flex items-center gap-3">
-                                        <span class="w-4 h-4 rounded-full flex-shrink-0 shadow-sm" :style="'background-color: ' + (opt.color || '#2563eb')"></span>
-                                        <span class="text-base sm:text-xl font-bold"
-                                              :class="isLight() ? 'text-slate-900' : 'text-white'"
-                                              x-text="opt.text"></span>
-                                        
-                                        <span x-show="showCorrectAnswer && opt.is_correct" 
-                                              class="px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-xs font-black uppercase tracking-wider animate-bounce shadow-sm">
-                                            ✓ Benar!
-                                        </span>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-xl sm:text-2xl font-black font-mono"
-                                              :class="isLight() ? 'text-blue-600' : 'text-white'"
-                                              x-text="(opt.percentage || 0) + '%'"></span>
-                                        <span class="text-xs block font-mono"
-                                              :class="isLight() ? 'text-slate-500' : 'text-slate-400'"
-                                              x-text="'(' + (opt.count || 0) + ' suara)'"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
+                <!-- Text & Visualizer Column -->
+                <div :class="{
+                        'w-full md:w-1/2': getImageLayout() === 'split_left' || getImageLayout() === 'split_right',
+                        'w-full md:w-3/4': getImageLayout() === 'sidebar_left' || getImageLayout() === 'sidebar_right',
+                        'w-full md:w-7/12': getImageLayout() === 'left' || getImageLayout() === 'right'
+                     }"
+                     class="flex flex-col text-left">
+                    <div class="mb-6 w-full">
+                        <h1 class="transition-colors"
+                            :class="[isLight() ? 'text-slate-900 drop-shadow-none' : 'text-white drop-shadow-md', getQuestionClasses(true)]"
+                            x-text="currentSlide.question || 'SpiritMeter'"></h1>
+                        
+                        <p class="mt-3 font-medium transition-colors"
+                           :class="[isLight() ? 'text-slate-600' : 'text-slate-300', getDescriptionClasses()]"
+                           x-show="currentSlide.type !== 'content_paragraph' && currentSlide.description" x-text="currentSlide.description"></p>
 
-                <!-- 2. WORD CLOUD (Dynamic Sized Keywords) -->
-                <template x-if="currentSlide.type === 'word_cloud'">
-                    <div class="w-full max-w-4xl p-8 rounded-3xl backdrop-blur-md border flex flex-wrap items-center justify-center gap-6 sm:gap-8 min-h-[300px]"
-                         :class="isLight() ? 'bg-white/90 border-blue-100 shadow-xl shadow-blue-500/5' : 'bg-slate-900/60 border-white/10'">
-                        <template x-for="(w, idx) in (results.words || [])" :key="idx">
-                            <span :style="'font-size: ' + calculateWordSize(w.weight) + 'rem; color: ' + getWordColor(idx) + ';'"
-                                  class="font-black tracking-tight transition-all duration-500 hover:scale-110 cursor-pointer drop-shadow-sm capitalize"
-                                  x-text="w.text"></span>
-                        </template>
-
-                        <div x-show="!results.words || results.words.length === 0" 
-                             class="text-base font-semibold"
-                             :class="isLight() ? 'text-slate-400' : 'text-slate-400'">
-                            Menunggu kata-kata pertama dari audiens...
+                        <!-- Text Slide Content (Materi) Card in Side Layout -->
+                        <div x-show="currentSlide.type === 'content_paragraph' && currentSlide.description"
+                             class="mt-4 p-5 sm:p-6 rounded-2xl backdrop-blur-md border text-left shadow-xl transition-all"
+                             :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5 text-slate-800' : 'bg-slate-900/80 border-white/10 text-slate-100'">
+                            <div :class="getContentParagraphClasses()" class="whitespace-pre-line leading-relaxed" x-text="currentSlide.description"></div>
                         </div>
                     </div>
-                </template>
 
-                <!-- 3. SCALES (Likert rating averages) -->
-                <template x-if="currentSlide.type === 'scales'">
-                    <div class="w-full max-w-3xl space-y-5">
-                        <template x-for="(stmt, idx) in (results.statements || [])" :key="idx">
-                            <div class="backdrop-blur-md rounded-2xl p-5 border shadow-xl text-left"
-                                 :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5 text-slate-800' : 'bg-slate-900/80 border-white/10 text-white'">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h3 class="text-base sm:text-lg font-bold"
-                                        :class="isLight() ? 'text-slate-900' : 'text-white'"
-                                        x-text="stmt.text"></h3>
-                                    <span class="text-2xl font-black font-mono"
-                                          :class="isLight() ? 'text-blue-600' : 'text-amber-300'"
-                                          x-text="(stmt.average || 0) + ' / 5.0'"></span>
-                                </div>
-
-                                <div class="w-full h-4 rounded-full overflow-hidden p-0.5"
-                                     :class="isLight() ? 'bg-blue-100' : 'bg-slate-800'">
-                                    <div class="bg-gradient-to-r from-blue-600 to-cyan-500 h-full rounded-full transition-all duration-700"
-                                         :style="'width: ' + ((stmt.average / 5) * 100) + '%;'"></div>
-                                </div>
-
-                                <div class="flex justify-between text-xs mt-2"
-                                     :class="isLight() ? 'text-slate-500' : 'text-slate-400'">
-                                    <span x-text="currentSlide.settings?.low_label || 'Sangat Rendah'"></span>
-                                    <span x-text="(stmt.respondents || 0) + ' responden'"></span>
-                                    <span x-text="currentSlide.settings?.high_label || 'Sangat Tinggi'"></span>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-
-                <!-- 4. RANKING -->
-                <template x-if="currentSlide.type === 'ranking'">
-                    <div class="w-full max-w-2xl space-y-3">
-                        <template x-for="(item, idx) in (results.items || [])" :key="idx">
-                            <div class="backdrop-blur-md rounded-2xl p-4 border shadow-xl flex items-center justify-between transition-all duration-500"
-                                 :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5' : 'bg-slate-900/80 border-white/10'">
-                                <div class="flex items-center gap-4">
-                                    <span class="w-8 h-8 rounded-xl bg-blue-600 font-mono font-black text-white flex items-center justify-center text-sm shadow-sm"
-                                          x-text="'#' + (idx + 1)"></span>
-                                    <span class="text-base sm:text-lg font-bold"
-                                          :class="isLight() ? 'text-slate-900' : 'text-white'"
-                                          x-text="item.text"></span>
-                                </div>
-                                <span class="text-sm font-mono font-bold"
-                                      :class="isLight() ? 'text-slate-600' : 'text-slate-300'"
-                                      x-text="item.score + ' Poin'"></span>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-
-                <!-- 5. OPEN ENDED (Ideas & Thoughts Grid) -->
-                <template x-if="currentSlide.type === 'open_ended'">
-                    <div class="w-full max-w-4xl grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-left">
-                        <template x-for="(entry, idx) in (results.entries || [])" :key="idx">
-                            <div class="backdrop-blur-md border p-5 rounded-3xl shadow-xl flex flex-col justify-between"
-                                 :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5' : 'bg-white/10 border-white/15'">
-                                <p class="text-sm font-medium mb-4 leading-relaxed"
-                                   :class="isLight() ? 'text-slate-800' : 'text-white'"
-                                   x-text="entry.text"></p>
-                                <div class="flex items-center justify-between text-xs pt-3 border-t"
-                                     :class="isLight() ? 'border-slate-100 text-slate-500' : 'border-white/10 text-slate-400'">
-                                    <span class="font-bold"
-                                          :class="isLight() ? 'text-blue-600' : 'text-indigo-300'"
-                                          x-text="entry.name"></span>
-                                    <span x-text="entry.created_at"></span>
-                                </div>
-                            </div>
-                        </template>
-
-                        <div x-show="!results.entries || results.entries.length === 0" 
-                             class="col-span-full py-12 text-center font-semibold"
-                             :class="isLight() ? 'text-slate-400' : 'text-slate-400'">
-                            Belum ada jawaban yang dikirim audiens...
-                        </div>
-                    </div>
-                </template>
-
-                <!-- 6. LEADERBOARD (Top Quiz Winners with Medals & Confetti) -->
-                <template x-if="currentSlide.type === 'leaderboard'">
-                    <div class="w-full max-w-2xl space-y-3">
-                        <template x-for="(player, idx) in (results.leaderboard || [])" :key="idx">
-                            <div :class="idx === 0 
-                                    ? (isLight() ? 'bg-gradient-to-r from-amber-50 to-amber-100/60 border-amber-300 shadow-xl scale-105' : 'bg-gradient-to-r from-amber-500/30 to-amber-600/20 border-amber-400/50 scale-105') 
-                                    : (isLight() ? 'bg-white/95 border-blue-100 shadow-md' : 'bg-slate-900/80 border-white/10')"
-                                 class="backdrop-blur-md rounded-2xl p-4 border flex items-center justify-between transition-all duration-500">
-                                <div class="flex items-center gap-3 sm:gap-4">
-                                    <span class="text-2xl" x-text="idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : '#' + (idx + 1)))"></span>
-                                    <span class="text-2xl" x-text="player.avatar || '🎯'"></span>
-                                    <span class="text-base sm:text-xl font-bold"
-                                          :class="isLight() ? 'text-slate-900' : 'text-white'"
-                                          x-text="player.nickname"></span>
-                                </div>
-                                <span class="text-xl sm:text-2xl font-black font-mono"
-                                      :class="isLight() ? 'text-blue-600' : 'text-amber-300'"
-                                      x-text="numberFormat(player.score) + ' Poin'"></span>
-                            </div>
-                        </template>
-
-                        <div x-show="!results.leaderboard || results.leaderboard.length === 0" 
-                             class="py-12 font-semibold"
-                             :class="isLight() ? 'text-slate-400' : 'text-slate-400'">
-                            Belum ada skor kuis tercatat.
-                        </div>
-                    </div>
-                </template>
-
-                <!-- 7. AUDIENCE Q&A -->
-                <template x-if="currentSlide.type === 'qa'">
-                    <div class="w-full max-w-3xl space-y-3 text-left">
-                        <template x-for="(q, idx) in (state.questions || [])" :key="q.id">
-                            <div class="backdrop-blur-md rounded-2xl p-4 border shadow-xl flex items-center justify-between gap-4"
-                                 :class="isLight() ? 'bg-white/95 border-blue-100 shadow-blue-500/5' : 'bg-slate-900/80 border-white/10'">
-                                <div>
-                                    <p class="text-base font-bold mb-1"
-                                       :class="isLight() ? 'text-slate-900' : 'text-white'"
-                                       x-text="q.question_text"></p>
-                                    <span class="text-xs"
-                                          :class="isLight() ? 'text-slate-500' : 'text-slate-400'"
-                                          x-text="'Oleh: ' + (q.participant_name || 'Anonim')"></span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="px-3 py-1.5 rounded-xl text-sm font-black font-mono"
-                                          :class="isLight() ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-indigo-600/40 text-indigo-200'">
-                                        ▲ <span x-text="q.upvotes"></span>
-                                    </span>
-                                </div>
-                            </div>
-                        </template>
-
-                        <div x-show="!state.questions || state.questions.length === 0" 
-                             class="text-center py-12 font-semibold"
-                             :class="isLight() ? 'text-slate-400' : 'text-slate-400'">
-                            Belum ada pertanyaan dari audiens.
-                        </div>
-                    </div>
-                </template>
+                    <!-- Live Results Visualizer (Side) -->
+                    @include('presenter.partials.visualizer')
+                </div>
 
             </div>
 
-            <!-- Hide Results Placeholder -->
-            <div x-show="!state.show_results" 
-                 class="py-16 font-bold text-lg"
-                 :class="isLight() ? 'text-slate-500' : 'text-slate-400'">
-                🔒 Hasil disembunyikan oleh Presenter. Tekan 'R' untuk menampilkan hasil.
-            </div>
         </main>
 
         <!-- FLOATING BOTTOM PRESENTER DOCK -->
@@ -374,6 +236,40 @@
                         :class="isLight() ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-white/10 text-white'"
                         title="Slide Selanjutnya (&rarr;)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+
+            <!-- Visualization Model Switcher (Bars, Donut, Pie, Dots) -->
+            <div x-show="currentSlide.type === 'multiple_choice' || currentSlide.type === 'quiz'" 
+                 class="flex items-center gap-1 backdrop-blur-md px-1.5 py-1 rounded-2xl border shadow-xl"
+                 :class="isLight() ? 'bg-white/95 border-blue-200/80 text-slate-800' : 'bg-slate-900/90 border-white/15 text-slate-200'">
+                <button @click="setVisualizationType('bars')" 
+                        :class="getVisualizationType() === 'bars' ? 'bg-indigo-600 text-white shadow-sm' : (isLight() ? 'hover:bg-slate-100 text-slate-600' : 'hover:bg-white/10 text-slate-400')"
+                        class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                        title="Tampilan Bars (Batang)">
+                    <span>📊</span>
+                    <span class="hidden sm:inline">Bars</span>
+                </button>
+                <button @click="setVisualizationType('donut')" 
+                        :class="getVisualizationType() === 'donut' ? 'bg-indigo-600 text-white shadow-sm' : (isLight() ? 'hover:bg-slate-100 text-slate-600' : 'hover:bg-white/10 text-slate-400')"
+                        class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                        title="Tampilan Donut (Cincin)">
+                    <span>🍩</span>
+                    <span class="hidden sm:inline">Donut</span>
+                </button>
+                <button @click="setVisualizationType('pie')" 
+                        :class="getVisualizationType() === 'pie' ? 'bg-indigo-600 text-white shadow-sm' : (isLight() ? 'hover:bg-slate-100 text-slate-600' : 'hover:bg-white/10 text-slate-400')"
+                        class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                        title="Tampilan Pie (Lingkaran)">
+                    <span>🥧</span>
+                    <span class="hidden sm:inline">Pie</span>
+                </button>
+                <button @click="setVisualizationType('dots')" 
+                        :class="getVisualizationType() === 'dots' ? 'bg-indigo-600 text-white shadow-sm' : (isLight() ? 'hover:bg-slate-100 text-slate-600' : 'hover:bg-white/10 text-slate-400')"
+                        class="px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                        title="Tampilan Dots (Titik Respon)">
+                    <span>🔵</span>
+                    <span class="hidden sm:inline">Dots</span>
                 </button>
             </div>
 
@@ -610,6 +506,263 @@
                 return this.state.theme === 'light_tech';
             },
 
+            getVisualizationType() {
+                return (this.currentSlide && this.currentSlide.settings && (this.currentSlide.settings.visualization_type || this.currentSlide.settings.chart_type)) || 'bars';
+            },
+
+            setVisualizationType(type) {
+                if (!this.currentSlide) return;
+                this.currentSlide.settings = this.currentSlide.settings || {};
+                this.currentSlide.settings.visualization_type = type;
+                this.currentSlide.settings.chart_type = type;
+
+                fetch('/slides/' + this.currentSlide.id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        settings: this.currentSlide.settings
+                    })
+                });
+            },
+
+            getChartSvg(isDonut = false, customOptions = null) {
+                const displayOpts = this.getDisplayOptions(customOptions);
+                if (!displayOpts || displayOpts.length === 0) return '';
+
+                const total = displayOpts.reduce((sum, o) => sum + (Number(o.count) || 0), 0);
+                const isZero = total === 0;
+                const isPercent = this.isPercentageMode();
+                const cx = 120, cy = 120;
+                const rOuter = 100;
+                const rInner = isDonut ? 52 : 0;
+
+                let currentAngle = -90;
+                let pathsSvg = '';
+                let textsSvg = '';
+
+                displayOpts.forEach((opt, idx) => {
+                    const val = Number(opt.count) || 0;
+                    const percent = isZero ? (1 / displayOpts.length) : (val / total);
+                    const angleSize = percent * 360;
+
+                    if (angleSize <= 0) return;
+
+                    const startAngle = currentAngle;
+                    const endAngle = currentAngle + angleSize;
+                    currentAngle = endAngle;
+
+                    const startRad = (startAngle * Math.PI) / 180;
+                    const endRad = (endAngle * Math.PI) / 180;
+                    const midRad = ((startAngle + endAngle) / 2 * Math.PI) / 180;
+
+                    const x1Outer = Number((cx + rOuter * Math.cos(startRad)).toFixed(2));
+                    const y1Outer = Number((cy + rOuter * Math.sin(startRad)).toFixed(2));
+                    const x2Outer = Number((cx + rOuter * Math.cos(endRad)).toFixed(2));
+                    const y2Outer = Number((cy + rOuter * Math.sin(endRad)).toFixed(2));
+
+                    const largeArc = angleSize > 180 ? 1 : 0;
+                    const color = isZero ? (opt.color || '#6366f1') + '66' : (opt.color || '#6366f1');
+
+                    let d = '';
+                    if (isDonut) {
+                        const x1Inner = Number((cx + rInner * Math.cos(startRad)).toFixed(2));
+                        const y1Inner = Number((cy + rInner * Math.sin(startRad)).toFixed(2));
+                        const x2Inner = Number((cx + rInner * Math.cos(endRad)).toFixed(2));
+                        const y2Inner = Number((cy + rInner * Math.sin(endRad)).toFixed(2));
+
+                        if (angleSize >= 359.9) {
+                            d = 'M ' + cx + ' ' + (cy - rOuter) + 
+                                ' A ' + rOuter + ' ' + rOuter + ' 0 1 1 ' + cx + ' ' + (cy + rOuter) + 
+                                ' A ' + rOuter + ' ' + rOuter + ' 0 1 1 ' + cx + ' ' + (cy - rOuter) + 
+                                ' M ' + cx + ' ' + (cy - rInner) + 
+                                ' A ' + rInner + ' ' + rInner + ' 0 1 0 ' + cx + ' ' + (cy + rInner) + 
+                                ' A ' + rInner + ' ' + rInner + ' 0 1 0 ' + cx + ' ' + (cy - rInner) + ' Z';
+                        } else {
+                            d = 'M ' + x1Outer + ' ' + y1Outer + 
+                                ' A ' + rOuter + ' ' + rOuter + ' 0 ' + largeArc + ' 1 ' + x2Outer + ' ' + y2Outer + 
+                                ' L ' + x2Inner + ' ' + y2Inner + 
+                                ' A ' + rInner + ' ' + rInner + ' 0 ' + largeArc + ' 0 ' + x1Inner + ' ' + y1Inner + ' Z';
+                        }
+                    } else {
+                        if (angleSize >= 359.9) {
+                            d = 'M ' + cx + ' ' + (cy - rOuter) + 
+                                ' A ' + rOuter + ' ' + rOuter + ' 0 1 1 ' + cx + ' ' + (cy + rOuter) + 
+                                ' A ' + rOuter + ' ' + rOuter + ' 0 1 1 ' + cx + ' ' + (cy - rOuter) + 
+                                ' Z';
+                        } else {
+                            d = 'M ' + cx + ' ' + cy + 
+                                ' L ' + x1Outer + ' ' + y1Outer + 
+                                ' A ' + rOuter + ' ' + rOuter + ' 0 ' + largeArc + ' 1 ' + x2Outer + ' ' + y2Outer + ' Z';
+                        }
+                    }
+
+                    pathsSvg += '<path d="' + d + '" fill="' + color + '" stroke="rgba(15,23,42,0.4)" stroke-width="2" class="transition-all duration-700" />\n';
+
+                    if (!isZero && angleSize > 25 && val > 0) {
+                        const textR = isDonut ? (rOuter + rInner) / 2 : rOuter * 0.65;
+                        const textX = Number((cx + textR * Math.cos(midRad)).toFixed(2));
+                        const textY = Number((cy + textR * Math.sin(midRad)).toFixed(2));
+                        const textVal = isPercent ? (Math.round((val / total) * 100) + '%') : val;
+                        textsSvg += '<text x="' + textX + '" y="' + textY + '" fill="#ffffff" font-size="13" font-weight="900" font-family="monospace" text-anchor="middle" dominant-baseline="central">' + textVal + '</text>\n';
+                    }
+                });
+
+                if (isZero) {
+                    textsSvg = '<text x="' + cx + '" y="' + cy + '" fill="rgba(255,255,255,0.4)" font-size="12" font-weight="700" text-anchor="middle" dominant-baseline="central">Belum ada suara</text>\n';
+                } else if (isDonut) {
+                    textsSvg += '<text x="' + cx + '" y="' + (cy - 7) + '" fill="rgba(255,255,255,0.6)" font-size="10" font-weight="700" text-anchor="middle" dominant-baseline="central">TOTAL</text>\n' +
+                                '<text x="' + cx + '" y="' + (cy + 10) + '" fill="#ffffff" font-size="16" font-weight="900" font-family="monospace" text-anchor="middle" dominant-baseline="central">' + total + '</text>\n';
+                }
+
+                return '<svg viewBox="0 0 240 240" class="w-full h-full drop-shadow-2xl" style="overflow:visible;">\n' + pathsSvg + textsSvg + '</svg>';
+            },
+
+            isPercentageMode() {
+                return Boolean(this.currentSlide && this.currentSlide.settings && this.currentSlide.settings.show_percentage);
+            },
+
+            getDisplayOptions(customOptions = null) {
+                const rawOptions = customOptions || (this.results && this.results.options) || (this.currentSlide && this.currentSlide.options) || [];
+                if (!rawOptions || rawOptions.length === 0) return [];
+
+                const totalVotes = rawOptions.reduce((sum, o) => sum + (Number(o.count) || 0), 0);
+                const maxVal = Math.max(1, ...rawOptions.map(o => Number(o.count) || 0));
+
+                return rawOptions.map((opt, idx) => {
+                    const count = Number(opt.count) || 0;
+                    const percent = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
+                    const displayValue = this.isPercentageMode() ? (percent + '%') : count;
+                    const barHeight = totalVotes > 0 ? Math.max(8, Math.round((count / maxVal) * 92)) : 6;
+
+                    return {
+                        id: opt.id || idx,
+                        text: opt.text || ('Opsi ' + (idx + 1)),
+                        color: opt.color || ['#6366f1', '#ef4444', '#1e293b', '#10b981', '#f59e0b', '#8b5cf6'][idx % 6],
+                        is_correct: opt.is_correct,
+                        count: count,
+                        percentage: percent,
+                        displayValue: displayValue,
+                        barHeight: barHeight,
+                        dotCount: count
+                    };
+                });
+            },
+
+            getPieSlices(isDonut = false, customOptions = null) {
+                const displayOpts = this.getDisplayOptions(customOptions);
+                if (!displayOpts || displayOpts.length === 0) return [];
+
+                const total = displayOpts.reduce((sum, o) => sum + (Number(o.count) || 0), 0);
+                const isZero = total === 0;
+                let currentAngle = -90;
+                const slices = [];
+                const cx = 120, cy = 120;
+                const rOuter = 100;
+                const rInner = isDonut ? 52 : 0;
+
+                displayOpts.forEach((opt, idx) => {
+                    const val = Number(opt.count) || 0;
+                    const percent = isZero ? (1 / displayOpts.length) : (val / total);
+                    const angleSize = percent * 360;
+
+                    if (angleSize <= 0) return;
+
+                    const startAngle = currentAngle;
+                    const endAngle = currentAngle + angleSize;
+                    currentAngle = endAngle;
+
+                    const startRad = (startAngle * Math.PI) / 180;
+                    const endRad = (endAngle * Math.PI) / 180;
+                    const midRad = ((startAngle + endAngle) / 2 * Math.PI) / 180;
+
+                    const x1Outer = Number((cx + rOuter * Math.cos(startRad)).toFixed(2));
+                    const y1Outer = Number((cy + rOuter * Math.sin(startRad)).toFixed(2));
+                    const x2Outer = Number((cx + rOuter * Math.cos(endRad)).toFixed(2));
+                    const y2Outer = Number((cy + rOuter * Math.sin(endRad)).toFixed(2));
+
+                    const largeArc = angleSize > 180 ? 1 : 0;
+
+                    let pathData = '';
+                    if (isDonut) {
+                        const x1Inner = Number((cx + rInner * Math.cos(startRad)).toFixed(2));
+                        const y1Inner = Number((cy + rInner * Math.sin(startRad)).toFixed(2));
+                        const x2Inner = Number((cx + rInner * Math.cos(endRad)).toFixed(2));
+                        const y2Inner = Number((cy + rInner * Math.sin(endRad)).toFixed(2));
+
+                        if (angleSize >= 359.9) {
+                            pathData = `M ${cx} ${cy - rOuter} A ${rOuter} ${rOuter} 0 1 1 ${cx} ${cy + rOuter} A ${rOuter} ${rOuter} 0 1 1 ${cx} ${cy - rOuter} M ${cx} ${cy - rInner} A ${rInner} ${rInner} 0 1 0 ${cx} ${cy + rInner} A ${rInner} ${rInner} 0 1 0 ${cx} ${cy - rInner} Z`;
+                        } else {
+                            pathData = `M ${x1Outer} ${y1Outer} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2Outer} ${y2Outer} L ${x2Inner} ${y2Inner} A ${rInner} ${rInner} 0 ${largeArc} 0 ${x1Inner} ${y1Inner} Z`;
+                        }
+                    } else {
+                        if (angleSize >= 359.9) {
+                            pathData = `M ${cx} ${cy - rOuter} A ${rOuter} ${rOuter} 0 1 1 ${cx} ${cy + rOuter} A ${rOuter} ${rOuter} 0 1 1 ${cx} ${cy - rOuter} Z`;
+                        } else {
+                            pathData = `M ${cx} ${cy} L ${x1Outer} ${y1Outer} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${x2Outer} ${y2Outer} Z`;
+                        }
+                    }
+
+                    const textR = isDonut ? (rOuter + rInner) / 2 : rOuter * 0.65;
+                    const textX = Number((cx + textR * Math.cos(midRad)).toFixed(2));
+                    const textY = Number((cy + textR * Math.sin(midRad)).toFixed(2));
+
+                    slices.push({
+                        path: pathData,
+                        color: isZero ? (opt.color + '66') : opt.color,
+                        text: opt.displayValue,
+                        textX: textX,
+                        textY: textY,
+                        showText: !isZero && angleSize > 20 && val > 0
+                    });
+                });
+
+                return slices;
+            },
+
+            getImageLayout() {
+                return (this.currentSlide && this.currentSlide.settings && this.currentSlide.settings.image_layout) || 'center';
+            },
+
+            isSideLayout() {
+                if (!this.currentSlide || !this.currentSlide.settings || !this.currentSlide.settings.content_image) return false;
+                const layout = this.getImageLayout();
+                return ['left', 'right', 'split_left', 'split_right', 'sidebar_left', 'sidebar_right'].includes(layout);
+            },
+
+            isLeftImage() {
+                const layout = this.getImageLayout();
+                return ['left', 'split_left', 'sidebar_left'].includes(layout);
+            },
+
+            getQuestionClasses(isSide = false) {
+                const len = (this.currentSlide && this.currentSlide.question ? this.currentSlide.question.length : 0);
+                if (isSide) {
+                    if (len > 100) return 'text-xl sm:text-2xl lg:text-3xl font-black leading-snug break-words';
+                    if (len > 60) return 'text-2xl sm:text-3xl lg:text-4xl font-black leading-snug break-words';
+                    return 'text-2xl sm:text-4xl font-black leading-tight break-words';
+                }
+                if (len > 100) return 'text-2xl sm:text-3xl lg:text-4xl font-black leading-snug break-words';
+                if (len > 60) return 'text-3xl sm:text-4xl lg:text-5xl font-black leading-snug break-words';
+                return 'text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight break-words';
+            },
+
+            getDescriptionClasses() {
+                const len = (this.currentSlide && this.currentSlide.description ? this.currentSlide.description.length : 0);
+                if (len > 100) return 'text-sm sm:text-base break-words';
+                return 'text-base sm:text-lg break-words';
+            },
+
+            getContentParagraphClasses() {
+                const len = (this.currentSlide && this.currentSlide.description ? this.currentSlide.description.length : 0);
+                if (len > 500) return 'text-sm sm:text-base break-words';
+                if (len > 250) return 'text-base sm:text-lg break-words';
+                return 'text-lg sm:text-xl font-medium break-words';
+            },
+
             calculateWordSize(weight) {
                 const base = 1.3;
                 const extra = Math.min(3.5, (weight || 1) * 0.7);
@@ -629,6 +782,12 @@
                 switch(this.state.theme) {
                     case 'light_tech':
                         return 'bg-gradient-to-br from-[#f0f6ff] via-[#e8f1fc] to-[#f8fbff] text-slate-900';
+                    case 'royal_gold':
+                        return 'bg-gradient-to-b from-[#0047ba] via-[#002f87] to-[#001744] text-white';
+                    case 'azure_tech':
+                        return 'bg-gradient-to-br from-[#005be2] via-[#0082e6] to-[#00a8e8] text-white';
+                    case 'cobalt_orange':
+                        return 'bg-gradient-to-br from-[#1e2cb8] via-[#2435c5] to-[#16208a] text-white';
                     case 'vibrant':
                         return 'bg-gradient-to-tr from-slate-950 via-purple-950 to-indigo-950';
                     case 'emerald':
@@ -638,6 +797,19 @@
                     default:
                         return 'bg-gradient-to-tr from-slate-950 via-slate-900 to-indigo-950';
                 }
+            },
+
+            getThemeStyle() {
+                if (this.currentSlide.settings?.background_image) {
+                    return 'background-image: linear-gradient(rgba(15,23,42,0.7), rgba(15,23,42,0.85)), url(' + this.currentSlide.settings.background_image + '); background-size: cover; background-position: center;';
+                }
+                if (this.state.theme === 'royal_gold') {
+                    return 'background-image: linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 40px 40px;';
+                }
+                if (this.state.theme === 'cobalt_orange') {
+                    return 'background-image: linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 32px 32px;';
+                }
+                return '';
             },
 
             numberFormat(num) {

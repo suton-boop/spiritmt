@@ -20,19 +20,18 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="h-full flex flex-col justify-between overflow-x-hidden transition-colors duration-300"
-      :class="state.theme === 'light_tech' ? 'bg-[#f0f6ff] text-slate-900' : 'bg-slate-950 text-white'"
+      :class="getParticipantThemeBg()"
       x-data="participantApp('{{ $presentation->access_code }}', '{{ $nickname }}', '{{ $avatar }}', '{{ csrf_token() }}')">
 
     <!-- Top Participant Header -->
     <header class="px-4 py-3 sticky top-0 z-30 flex items-center justify-between border-b transition-colors"
-            :class="state.theme === 'light_tech' ? 'bg-white/95 border-blue-100 backdrop-blur-md shadow-sm' : 'bg-slate-900 border-slate-800'">
+            :class="getParticipantHeaderClass()">
         <div class="flex items-center gap-2.5 truncate max-w-[65%]">
             <span class="w-7 h-7 rounded-lg p-0.5 flex items-center justify-center flex-shrink-0"
                   :class="state.theme === 'light_tech' ? 'bg-white border border-blue-200 shadow-sm' : 'bg-slate-950 border border-slate-800'">
                 <img src="{{ asset('image/logo spiritmeter.png') }}" alt="Logo SpiritMeter" class="w-full h-full object-contain">
             </span>
             <span class="text-xs sm:text-sm font-bold truncate"
-                  :class="state.theme === 'light_tech' ? 'text-slate-800' : 'text-slate-200'"
                   x-text="state.title || 'SpiritMeter'"></span>
         </div>
 
@@ -89,20 +88,44 @@
         <div x-show="!hasVoted && state.voting_status === 'open'" class="space-y-6">
             
             <!-- Slide Question Header -->
-            <div class="text-center space-y-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/60 px-3 py-1 rounded-full border border-indigo-800/60">
-                    <span x-text="getTypeBadge(currentSlide.type)"></span>
-                </span>
-                
-                <h1 class="text-xl sm:text-2xl font-black text-white leading-snug"
-                    x-text="currentSlide.question || 'Pertanyaan'"></h1>
+            <div class="space-y-3">
+                <!-- Top Banner (if banner layout and image exists) -->
+                <div x-show="getImageLayout() === 'banner' && currentSlide.settings?.content_image" class="w-full max-h-40 rounded-2xl overflow-hidden shadow-lg border border-slate-700 bg-slate-900">
+                    <img :src="currentSlide.settings?.content_image" alt="Ilustrasi Soal" class="w-full h-full object-cover">
+                </div>
 
-                <p class="text-xs text-slate-400" x-show="currentSlide.description" x-text="currentSlide.description"></p>
+                <!-- Non-side header (or mobile stacked) -->
+                <div x-show="!isSideLayout()" class="text-center space-y-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/60 px-3 py-1 rounded-full border border-indigo-800/60 inline-block">
+                        <span x-text="getTypeBadge(currentSlide.type)"></span>
+                    </span>
+                    
+                    <h1 class="text-xl sm:text-2xl font-black text-white leading-snug break-words"
+                        x-text="currentSlide.question || 'Pertanyaan'"></h1>
 
-                <!-- Content Image if any -->
-                <div x-show="currentSlide.settings?.content_image" class="mt-3 max-w-sm mx-auto">
+                    <p class="text-xs text-slate-400 break-words" x-show="currentSlide.description" x-text="currentSlide.description"></p>
+
+                    <!-- Center Image (if center layout and image exists) -->
+                    <div x-show="getImageLayout() !== 'banner' && currentSlide.settings?.content_image" class="mt-3 max-w-sm mx-auto">
+                        <img :src="currentSlide.settings?.content_image" alt="Ilustrasi Soal" 
+                             class="max-h-48 w-auto mx-auto rounded-2xl object-contain shadow-lg border border-slate-700 bg-slate-900/60">
+                    </div>
+                </div>
+
+                <!-- Side header (Left or Right) -->
+                <div x-show="isSideLayout()" 
+                     class="flex items-center gap-3.5 p-3 rounded-2xl bg-slate-900/60 border border-slate-800"
+                     :class="isLeftImage() ? 'flex-row' : 'flex-row-reverse'">
                     <img :src="currentSlide.settings?.content_image" alt="Ilustrasi Soal" 
-                         class="max-h-48 w-auto mx-auto rounded-2xl object-contain shadow-lg border border-slate-700 bg-slate-900/60">
+                         class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover border border-slate-700 bg-slate-950 flex-shrink-0 shadow-md">
+                    <div class="flex-1 text-left min-w-0">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-800/60 inline-block mb-1">
+                            <span x-text="getTypeBadge(currentSlide.type)"></span>
+                        </span>
+                        <h1 class="text-base sm:text-lg font-black text-white leading-snug break-words"
+                            x-text="currentSlide.question || 'Pertanyaan'"></h1>
+                        <p class="text-[11px] text-slate-400 mt-1 break-words" x-show="currentSlide.description" x-text="currentSlide.description"></p>
+                    </div>
                 </div>
             </div>
 
@@ -116,34 +139,85 @@
 
             <!-- A. MULTIPLE CHOICE / QUIZ -->
             <div x-show="currentSlide.type === 'multiple_choice' || currentSlide.type === 'quiz'" class="space-y-3">
-                <template x-for="(opt, idx) in (currentSlide.options || [])" :key="opt.id || idx">
-                    <button @click="submitSingleChoice(opt.id)"
-                            :disabled="submitting"
-                            :class="state.theme === 'light_tech' 
-                                ? 'bg-white border-2 border-blue-100 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/5 text-slate-900 shadow-sm' 
-                                : 'bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 text-white'"
-                            class="w-full p-4 rounded-2xl active:scale-[0.98] transition-all text-left flex items-center justify-between group">
-                        <div class="flex items-center gap-3">
-                            <span class="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm" :style="'background-color: ' + (opt.color || '#2563eb')"></span>
-                            <span class="text-sm font-bold"
-                                  :class="state.theme === 'light_tech' ? 'text-slate-900 group-hover:text-blue-600' : 'text-white group-hover:text-indigo-300'"
-                                  x-text="opt.text"></span>
-                        </div>
-                        <span class="text-xs font-mono"
-                              :class="state.theme === 'light_tech' ? 'text-blue-600 font-bold' : 'text-slate-500'">Pilih</span>
+                <!-- If Multiple Selection enabled -->
+                <div x-show="isMultipleSelection()" class="space-y-3">
+                    <p class="text-xs font-bold text-indigo-400 bg-indigo-950/40 border border-indigo-800/40 px-3 py-1.5 rounded-xl text-center">
+                        ✓ Anda dapat memilih lebih dari satu jawaban
+                    </p>
+                    <template x-for="(opt, idx) in (currentSlide.options || [])" :key="opt.id || idx">
+                        <button type="button" @click="toggleMultipleOption(opt.id)"
+                                :disabled="submitting"
+                                :class="selectedOptions.includes(opt.id)
+                                    ? (state.theme === 'light_tech' ? 'bg-blue-50 border-2 border-blue-600 shadow-md text-slate-900' : 'bg-indigo-950/70 border-2 border-indigo-500 text-white shadow-lg shadow-indigo-500/10')
+                                    : (state.theme === 'light_tech' ? 'bg-white border-2 border-blue-100 hover:border-blue-300 text-slate-900' : 'bg-slate-900 border-2 border-slate-800 hover:border-slate-700 text-white')"
+                                class="w-full p-4 rounded-2xl active:scale-[0.98] transition-all text-left flex items-center justify-between group">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm" :style="'background-color: ' + (opt.color || '#2563eb')"></span>
+                                <span class="text-sm font-bold break-words leading-snug"
+                                      :class="selectedOptions.includes(opt.id) ? (state.theme === 'light_tech' ? 'text-blue-700' : 'text-indigo-300') : ''"
+                                      x-text="opt.text"></span>
+                            </div>
+                            <div class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0"
+                                 :class="selectedOptions.includes(opt.id)
+                                     ? 'bg-indigo-600 border-indigo-600 text-white'
+                                     : (state.theme === 'light_tech' ? 'border-slate-300 bg-white' : 'border-slate-700 bg-slate-950')">
+                                <svg x-show="selectedOptions.includes(opt.id)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </button>
+                    </template>
+
+                    <button type="button" @click="submitMultipleChoice()"
+                            :disabled="selectedOptions.length === 0 || submitting"
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-extrabold rounded-2xl shadow-xl shadow-indigo-600/30 transition-all text-sm flex items-center justify-center gap-2 mt-4">
+                        <span>Kirim Jawaban</span>
+                        <span x-show="selectedOptions.length > 0" class="px-2 py-0.5 rounded-full bg-white/20 text-xs font-mono" x-text="selectedOptions.length + ' dipilih'"></span>
                     </button>
-                </template>
+                </div>
+
+                <!-- If Single Selection (Default) -->
+                <div x-show="!isMultipleSelection()" class="space-y-3">
+                    <template x-for="(opt, idx) in (currentSlide.options || [])" :key="opt.id || idx">
+                        <button type="button" @click="submitSingleChoice(opt.id)"
+                                :disabled="submitting"
+                                :class="state.theme === 'light_tech' 
+                                    ? 'bg-white border-2 border-blue-100 hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/5 text-slate-900 shadow-sm' 
+                                    : 'bg-slate-900 border-2 border-slate-800 hover:border-indigo-500 text-white'"
+                                class="w-full p-4 rounded-2xl active:scale-[0.98] transition-all text-left flex items-center justify-between group">
+                            <div class="flex items-center gap-3 min-w-0 pr-2">
+                                <span class="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm" :style="'background-color: ' + (opt.color || '#2563eb')"></span>
+                                <span class="text-sm font-bold break-words leading-snug"
+                                      :class="state.theme === 'light_tech' ? 'text-slate-900 group-hover:text-blue-600' : 'text-white group-hover:text-indigo-300'"
+                                      x-text="opt.text"></span>
+                            </div>
+                            <span class="text-xs font-mono flex-shrink-0"
+                                  :class="state.theme === 'light_tech' ? 'text-blue-600 font-bold' : 'text-slate-500'">Pilih</span>
+                        </button>
+                    </template>
+                </div>
             </div>
 
             <!-- B. WORD CLOUD (Up to 3 inputs) -->
             <div x-show="currentSlide.type === 'word_cloud'" class="space-y-4">
                 <div class="space-y-2.5">
-                    <input type="text" x-model="wordInputs[0]" placeholder="Kata pertama (wajib)..." maxlength="30"
-                           class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-indigo-500">
-                    <input type="text" x-model="wordInputs[1]" placeholder="Kata kedua (opsional)..." maxlength="30"
-                           class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-indigo-500">
-                    <input type="text" x-model="wordInputs[2]" placeholder="Kata ketiga (opsional)..." maxlength="30"
-                           class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-indigo-500">
+                    <div class="space-y-1">
+                        <input type="text" x-model="wordInputs[0]" placeholder="Kata pertama (wajib)..." maxlength="25"
+                               class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="space-y-1">
+                        <input type="text" x-model="wordInputs[1]" placeholder="Kata kedua (opsional)..." maxlength="25"
+                               class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="space-y-1">
+                        <input type="text" x-model="wordInputs[2]" placeholder="Kata ketiga (opsional)..." maxlength="25"
+                               class="w-full px-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                    <span>Maks. 25 karakter per kata</span>
+                    <span>💡 1 kata kunci pendek</span>
                 </div>
 
                 <button @click="submitWordCloud()" :disabled="!wordInputs[0] || submitting"
@@ -156,7 +230,7 @@
             <div x-show="currentSlide.type === 'scales'" class="space-y-4">
                 <template x-for="(stmt, idx) in (currentSlide.options || [])" :key="stmt.id || idx">
                     <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-2">
-                        <div class="text-xs sm:text-sm font-bold text-white" x-text="stmt.text"></div>
+                        <div class="text-xs sm:text-sm font-bold text-white break-words leading-snug" x-text="stmt.text"></div>
                         <div class="flex items-center justify-between gap-1 pt-1">
                             <template x-for="val in [1, 2, 3, 4, 5]" :key="val">
                                 <button type="button" @click="scaleAnswers[stmt.id] = val"
@@ -178,9 +252,9 @@
                 <p class="text-xs text-slate-400 text-center">Ketuk urutan prioritas dari nomor 1 ke bawah:</p>
                 <template x-for="(item, idx) in (currentSlide.options || [])" :key="item.id || idx">
                     <button @click="toggleRankingItem(item.id)"
-                            class="w-full p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-left flex items-center justify-between">
-                        <span class="text-sm font-bold text-white" x-text="item.text"></span>
-                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-mono font-bold flex items-center justify-center text-xs"
+                            class="w-full p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-left flex items-center justify-between gap-2">
+                        <span class="text-sm font-bold text-white break-words leading-snug flex-1" x-text="item.text"></span>
+                        <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-mono font-bold flex items-center justify-center text-xs flex-shrink-0"
                               x-text="getRankingNumber(item.id)"></span>
                     </button>
                 </template>
@@ -193,8 +267,14 @@
 
             <!-- E. OPEN ENDED -->
             <div x-show="currentSlide.type === 'open_ended'" class="space-y-3">
-                <textarea x-model="openEndedAnswer" rows="4" placeholder="Tuliskan jawaban atau pendapat Anda di sini..."
+                <textarea x-model="openEndedAnswer" rows="4" maxlength="250"
+                          placeholder="Tuliskan jawaban atau pendapat Anda di sini..."
                           class="w-full p-4 bg-slate-900 border border-slate-800 rounded-2xl text-sm font-medium text-white focus:outline-none focus:border-indigo-500"></textarea>
+
+                <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                    <span>💡 1–2 kalimat singkat</span>
+                    <span class="font-mono font-bold" :class="openEndedAnswer.length > 200 ? 'text-amber-400' : 'text-slate-400'"><span x-text="openEndedAnswer.length"></span>/250 karakter</span>
+                </div>
 
                 <button @click="submitOpenEnded()" :disabled="!openEndedAnswer.trim() || submitting"
                         class="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-extrabold rounded-2xl shadow-xl shadow-indigo-600/30 transition-all text-sm">
@@ -313,6 +393,7 @@
             newQuestionText: '',
 
             // Inputs
+            selectedOptions: [],
             wordInputs: ['', '', ''],
             scaleAnswers: {},
             rankingList: [],
@@ -339,6 +420,7 @@
                         if (previousSlideId !== null && previousSlideId !== data.current_slide_id) {
                             this.hasVoted = data.has_voted;
                             this.startTime = Date.now();
+                            this.selectedOptions = [];
                             this.wordInputs = ['', '', ''];
                             this.scaleAnswers = {};
                             this.rankingList = [];
@@ -347,6 +429,25 @@
                             this.hasVoted = data.has_voted;
                         }
                     });
+            },
+
+            isMultipleSelection() {
+                return Boolean(this.currentSlide && this.currentSlide.settings && this.currentSlide.settings.multiple_selection);
+            },
+
+            toggleMultipleOption(optionId) {
+                const idx = this.selectedOptions.indexOf(optionId);
+                if (idx > -1) {
+                    this.selectedOptions.splice(idx, 1);
+                } else {
+                    this.selectedOptions.push(optionId);
+                }
+            },
+
+            submitMultipleChoice() {
+                if (this.selectedOptions.length > 0) {
+                    this.sendAnswer(this.selectedOptions);
+                }
             },
 
             submitSingleChoice(optionId) {
@@ -471,6 +572,51 @@
                     'leaderboard': 'Papan Peringkat'
                 };
                 return map[type] || 'Polling';
+            },
+
+            getImageLayout() {
+                return (this.currentSlide && this.currentSlide.settings && this.currentSlide.settings.image_layout) || 'center';
+            },
+
+            isSideLayout() {
+                if (!this.currentSlide || !this.currentSlide.settings || !this.currentSlide.settings.content_image) return false;
+                const layout = this.getImageLayout();
+                return ['left', 'right', 'split_left', 'split_right', 'sidebar_left', 'sidebar_right'].includes(layout);
+            },
+
+            isLeftImage() {
+                const layout = this.getImageLayout();
+                return ['left', 'split_left', 'sidebar_left'].includes(layout);
+            },
+
+            getParticipantThemeBg() {
+                switch(this.state.theme) {
+                    case 'light_tech':
+                        return 'bg-[#f0f6ff] text-slate-900';
+                    case 'royal_gold':
+                        return 'bg-gradient-to-b from-[#003893] to-[#001744] text-white';
+                    case 'azure_tech':
+                        return 'bg-gradient-to-b from-[#006fe6] to-[#0047ba] text-white';
+                    case 'cobalt_orange':
+                        return 'bg-[#1e2cb8] text-white';
+                    default:
+                        return 'bg-slate-950 text-white';
+                }
+            },
+
+            getParticipantHeaderClass() {
+                switch(this.state.theme) {
+                    case 'light_tech':
+                        return 'bg-white/95 border-blue-100 backdrop-blur-md shadow-sm text-slate-900';
+                    case 'royal_gold':
+                        return 'bg-[#002f87]/90 border-blue-500/30 backdrop-blur-md shadow-lg text-white';
+                    case 'azure_tech':
+                        return 'bg-[#005be2]/90 border-sky-400/30 backdrop-blur-md shadow-lg text-white';
+                    case 'cobalt_orange':
+                        return 'bg-[#16208a]/90 border-indigo-500/30 backdrop-blur-md shadow-lg text-white';
+                    default:
+                        return 'bg-slate-900 border-slate-800 text-white';
+                }
             }
         }
     }

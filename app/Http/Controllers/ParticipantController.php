@@ -137,6 +137,17 @@ class ParticipantController extends Controller
         $slide = Slide::where('id', $slideId)->where('presentation_id', $presentation->id)->firstOrFail();
 
         $value = $request->input('value');
+        if ($slide->type === 'word_cloud') {
+            if (is_array($value)) {
+                $value = array_values(array_filter(array_map(fn ($w) => mb_substr(trim((string) $w), 0, 25), $value)));
+            } elseif (is_string($value)) {
+                $value = mb_substr(trim($value), 0, 25);
+            }
+        } elseif ($slide->type === 'open_ended') {
+            if (is_string($value)) {
+                $value = mb_substr(trim($value), 0, 250);
+            }
+        }
         $nickname = $request->session()->get('participant_nickname', $request->input('name', 'Peserta'));
         $responseTimeMs = $request->input('response_time_ms', 0);
 
